@@ -79,11 +79,15 @@ class AdvisorNotifier extends StateNotifier<AdvisorState> {
 
   final DateFormat timeFormatter = DateFormat('HH:mm'); // Keep formatter here or pass
 
-  // Initialize or start a new chat (simplified)
-  Future<void> startNewChat() async {
+  // Initialize chat based on entry point
+  Future<void> initializeChat({bool startWithDocumentPrompt = false}) async {
     state = const AdvisorState(); // Reset state for a new chat
-    // Optional: Add an initial greeting message from AI
-    // _addMessage("Merhaba! Size nasıl yardımcı olabilirim?", false);
+    if (startWithDocumentPrompt) {
+      _addMessage("Merhaba! Hangi belgeyi oluşturmak istersiniz? Lütfen belge türünü belirtin (örn: Kira Sözleşmesi).", false);
+    } else {
+      // Optional: Add a general greeting message from AI for normal chat
+       _addMessage("Merhaba! Size nasıl yardımcı olabilirim?", false);
+    }
   }
 
   // Regex to find the legal-document block
@@ -196,7 +200,12 @@ final advisorNotifierProvider = StateNotifierProvider<AdvisorNotifier, AdvisorSt
 });
 
 class AdvisorScreen extends ConsumerStatefulWidget {
-  const AdvisorScreen({super.key});
+  final bool startWithDocumentPrompt; // Add argument
+
+  const AdvisorScreen({
+    super.key,
+    this.startWithDocumentPrompt = false, // Default to false
+  });
 
   @override
   ConsumerState<AdvisorScreen> createState() => _AdvisorScreenState();
@@ -213,7 +222,10 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(advisorNotifierProvider.notifier).startNewChat();
+      // Pass the flag to the notifier
+      ref.read(advisorNotifierProvider.notifier).initializeChat(
+        startWithDocumentPrompt: widget.startWithDocumentPrompt
+      );
     });
   }
   

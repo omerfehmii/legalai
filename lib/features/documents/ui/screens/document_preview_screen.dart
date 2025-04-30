@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
+
 import '../../data/models/document_template.dart';
 import '../../providers/document_providers.dart';
 import 'package:legalai/core/theme/app_theme.dart';
+import 'package:legalai/main.dart';
 
 /// Oluşturulan PDF belgesini önizleme ve indirme/paylaşma ekranı
 class DocumentPreviewScreen extends ConsumerStatefulWidget {
@@ -84,14 +89,11 @@ class _DocumentPreviewScreenState extends ConsumerState<DocumentPreviewScreen> {
               // --- Eylem Butonları ---
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                icon: Icon(Icons.download_outlined, size: 20),
-                label: Text('İndir'),
-                onPressed: () {
-                  // TODO: PDF İndirme Mantığını Uygula
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('İndirme işlemi başlatıldı (simülasyon).'))
-                  );
-                },
+                icon: _isSaving 
+                    ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: theme.colorScheme.onPrimary))
+                    : Icon(Icons.save_alt_outlined, size: 20),
+                label: Text(_isSaving ? 'Kaydediliyor...' : 'Kaydet'),
+                onPressed: _isSaving ? null : _savePdfPermanently,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: theme.colorScheme.primary,
@@ -107,15 +109,9 @@ class _DocumentPreviewScreenState extends ConsumerState<DocumentPreviewScreen> {
               ElevatedButton.icon(
                 icon: Icon(Icons.share_outlined, size: 20),
                 label: Text('Paylaş'),
-                onPressed: () {
-                  // TODO: PDF Paylaşma Mantığını Uygula
-                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Paylaşma işlemi başlatıldı (simülasyon).'))
-                  );
-                },
+                onPressed: _shareDocument,
                  style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  // İkincil bir stil kullanabiliriz veya aynı stilde bırakabiliriz
                   backgroundColor: theme.colorScheme.secondary, 
                   foregroundColor: theme.colorScheme.onSecondary,
                   textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -151,6 +147,15 @@ class _DocumentPreviewScreenState extends ConsumerState<DocumentPreviewScreen> {
 
   /// Belgeyi paylaşma menüsünü açar
   Future<void> _shareDocument() async {
+    final tempFile = File(widget.pdfPath);
+    if (!await tempFile.exists()) {
+       if (!mounted) return;
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Paylaşılacak dosya bulunamadı. Lütfen tekrar oluşturun.')),
+       );
+       return;
+    }
+    
     try {
       final file = XFile(widget.pdfPath);
       await Share.shareXFiles(
@@ -166,6 +171,74 @@ class _DocumentPreviewScreenState extends ConsumerState<DocumentPreviewScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  /// PDF'i kalıcı dizine kopyalar ve Hive'a kaydeder
+  Future<void> _savePdfPermanently() async {
+    setState(() {
+      _isSaving = true;
+    });
+    
+    try {
+      final tempFile = File(widget.pdfPath);
+      if (!await tempFile.exists()) {
+        throw Exception("Oluşturulan geçici PDF dosyası bulunamadı.");
+      }
+      
+      // Kalıcı dizini al
+      final Directory appDocDir = await getApplicationDocumentsDirectory();
+      final String permanentDirPath = appDocDir.path;
+      
+      // Yeni dosya adı oluştur (Türkçe karakterleri ve boşlukları değiştir)
+      final String safeTemplateName = widget.template.name
+          .replaceAll(RegExp(r'[\/\\:*?"<>|ıİşŞğĞçÇöÖüÜ ]'), '_');
+      final String timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final String newFileName = '${safeTemplateName}_$timestamp.pdf';
+      final String permanentFilePath = '$permanentDirPath/$newFileName';
+      
+      // Dosyayı kalıcı dizine kopyala
+      final File permanentFile = await tempFile.copy(permanentFilePath);
+      print('PDF copied to: ${permanentFile.path}');
+      
+      // Hive'a kaydet
+      final box = Hive.box(HiveBoxes.savedDocuments);
+      await box.put(
+        permanentFile.path, // Use path as key for simplicity, or generate UUID
+        {
+          'filePath': permanentFile.path,
+          'name': widget.template.name, // Use template name or allow user input later
+          'savedAt': DateTime.now(),
+        },
+      );
+       print('Saved document info to Hive box: ${HiveBoxes.savedDocuments}');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Belge başarıyla kaydedildi!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      
+      // Optional: Delete the temporary file after successful save
+      // await tempFile.delete();
+      
+    } catch (e) {
+      print('Error saving PDF permanently: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Belge kaydedilemedi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
 

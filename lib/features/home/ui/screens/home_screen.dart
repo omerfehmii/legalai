@@ -119,8 +119,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Icon(
                         Icons.layers,
                         color: _currentContent == HomeScreenContent.home
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.6),
+                            ? AppTheme.secondaryColor 
+                            : Colors.white,
                         size: 24,
                       ),
                   ),
@@ -144,8 +144,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Icon(
                         Icons.person_outline,
                         color: _currentContent == HomeScreenContent.profile
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.6),
+                            ? AppTheme.secondaryColor 
+                            : Colors.white,
                         size: 24,
                       ),
                     ),
@@ -157,10 +157,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Add button on right side
             GestureDetector(
               onTap: () {
-                // Belge şablonu listesi yerine Belge Oluşturucu ekranına git
+                // AdvisorScreen'e özel parametre ile git
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const GeneratorScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AdvisorScreen(startWithDocumentPrompt: true),
+                  ),
                 );
               },
               child: Container(
@@ -172,7 +174,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 child: const Icon(
                   Icons.add,
-                  color: Colors.white,
+                  color: AppTheme.secondaryColor,
                   size: 30,
                 ),
               ),
@@ -347,7 +349,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Ask AI',
               subtitle: 'Summarize, finish wri...',
               onTap: () {
-                // Doğrudan yeni bir sohbet başlat yerine Advisor ekranına git
+                // Buradan gidildiğinde normal sohbet başlasın (parametre yok veya false)
              Navigator.push(
                context,
                MaterialPageRoute(builder: (context) => const AdvisorScreen()),
