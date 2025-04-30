@@ -76,12 +76,12 @@ class AppTheme {
       ),
     ],
   );
-
+  
   // --- Icon Container Decoration ---
   static BoxDecoration iconContainerDecoration = BoxDecoration(
     color: cardColor,
     borderRadius: BorderRadius.circular(16),
-  );
+    );
 
   // --- Theme Data ---
   static ThemeData get lightTheme {

@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'dart:ui'; // For ImageFilter
 import 'package:legalai/core/theme/app_theme.dart';
-import 'package:legalai/features/chat/ui/screens/chat_screen.dart';
+import 'package:legalai/features/advisor/ui/screens/advisor_screen.dart';
+import 'package:legalai/features/generator/ui/generator_screen.dart';
+import 'package:legalai/features/documents/ui/screens/document_template_list_screen.dart';
+import 'package:legalai/screens/saved_documents_screen.dart';
 
 // Hangi içeriğin gösterileceğini belirten enum
 enum HomeScreenContent {
@@ -94,16 +97,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: Colors.transparent,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+        children: [
             // Left side pill-shaped container with two options
             Container(
               height: 56,
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(30),
-              ),
+            ),
               child: Row(
-                children: [
+              children: [
                   // First icon (home/layers icon)
                   GestureDetector(
                     onTap: () {
@@ -120,9 +123,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             : Colors.white.withOpacity(0.6),
                         size: 24,
                       ),
-                    ),
                   ),
-                  
+                ),
+                
                   // Second icon (profile)
                   GestureDetector(
                     onTap: () {
@@ -152,17 +155,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             
             // Add button on right side
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 30,
+            GestureDetector(
+              onTap: () {
+                // Belge şablonu listesi yerine Belge Oluşturucu ekranına git
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GeneratorScreen()),
+                );
+              },
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  size: 30,
+                ),
               ),
             ),
           ],
@@ -204,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            
+
             // Notification icon with badge
             Stack(
               children: [
@@ -289,9 +301,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Scan',
               subtitle: 'Documents, ID cards...',
               onTap: () {
-                // Handle scan tap
+                // Placeholder action
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(content: Text('Tarama özelliği yakında!'), duration: Duration(seconds: 2)),
+                 );
               },
-            ),
+          ),
             
             // Create button
             _buildFeatureButton(
@@ -300,20 +315,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Create',
               subtitle: 'Sign, add text, mark...',
               onTap: () {
-                // Handle edit tap
+                 // Placeholder action (previously navigated to DocumentTemplateListScreen)
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(content: Text('Oluşturma özelliği yakında!'), duration: Duration(seconds: 2)),
+                 );
+                 // Navigator.push(
+                 //   context,
+                 //   MaterialPageRoute(builder: (context) => const DocumentTemplateListScreen()),
+                 // );
               },
-            ),
+          ),
             
-            // Docs button
+            // Docs button - Changed onTap to navigate to SavedDocumentsScreen
             _buildFeatureButton(
               context,
-              iconWidget: _buildWireframeIcon(Icons.arrow_outward_outlined),
+              iconWidget: _buildWireframeIcon(Icons.folder_copy_outlined),
               title: 'Docs',
-              subtitle: 'PDF, DOCX, JPG, TX...',
+              subtitle: 'Saved PDFs & Files',
               onTap: () {
-                // Handle convert tap
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SavedDocumentsScreen()),
+                );
               },
-            ),
+          ),
             
             // Ask AI button
             _buildFeatureButton(
@@ -322,11 +347,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Ask AI',
               subtitle: 'Summarize, finish wri...',
               onTap: () {
-                // Doğrudan yeni bir sohbet başlat
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChatScreen()),
-                );
+                // Doğrudan yeni bir sohbet başlat yerine Advisor ekranına git
+             Navigator.push(
+               context,
+               MaterialPageRoute(builder: (context) => const AdvisorScreen()),
+             );
               },
             ),
           ],
@@ -350,6 +375,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
+                   onChanged: (value) {
+                     // Placeholder for search logic
+                     print("Search query: $value");
+                   },
                   decoration: InputDecoration(
                     hintText: 'Search',
                     hintStyle: TextStyle(
@@ -434,7 +463,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // Email
         Text(
           'kullanici@ornek.com',
-          style: TextStyle(
+                  style: TextStyle(
             fontSize: 16,
             color: Colors.grey[600],
           ),
@@ -447,7 +476,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           icon: Icons.person_outline,
           title: 'Kişisel Bilgiler',
           onTap: () {},
-        ),
+              ),
         
         _buildSettingsItem(
           icon: Icons.notifications_none,
@@ -520,9 +549,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
-          ),
-        ],
-      ),
+                          ),
+                        ],
+                      ),
       child: ListTile(
         leading: Icon(
           icon,
@@ -541,7 +570,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Icons.arrow_forward_ios,
           color: AppTheme.primaryColor,
           size: 16,
-        ),
+                      ),
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,

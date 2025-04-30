@@ -5,25 +5,26 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Hive Modellerini ve Adaptörlerini import et
-import 'features/chat/data/models/chat_message.dart';
-import 'features/chat/data/models/chat_session.dart';
+// import 'features/chat/data/models/chat_message.dart';
+// import 'features/chat/data/models/chat_session.dart';
 import 'features/documents/data/models/document_field.dart';
 import 'features/documents/data/models/document_template.dart';
 import 'features/documents/data/models/saved_document_draft.dart';
 import 'core/hive/template_loader.dart'; // TemplateLoader'ı import et
-import 'features/chat/ui/screens/chat_screen.dart'; // ChatScreen'i import et
+// import 'features/chat/ui/screens/chat_screen.dart';
 import 'features/home/ui/screens/home_screen.dart'; // HomeScreen'i import et
 import 'core/theme/app_theme.dart'; // App theme'i import et
 
 // Uygulamanın ana widget'ını (henüz oluşturulmadı) import et (örnek: app.dart)
 // import 'app.dart';
 
-// Hive Box isimleri için sabitler (opsiyonel ama önerilir)
+// Hive Box isimleri için sabitler
 class HiveBoxes {
-  static const String chatHistory = 'chatHistory';
-  static const String chatSessions = 'chatSessions';
-  static const String documentTemplates = 'documentTemplates';
-  static const String savedDrafts = 'savedDrafts';
+  // static const String chatHistory = 'chatHistory';
+  // static const String chatSessions = 'chatSessions';
+  static const String documentTemplates = 'document_templates';
+  static const String savedDrafts = 'document_drafts';
+  static const String savedDocuments = 'saved_documents';
 }
 
 Future<void> main() async {
@@ -34,26 +35,24 @@ Future<void> main() async {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     print("Error loading .env file: $e"); // Hata durumunda logla
-    // .env dosyası yüklenemezse uygulama devam etmeli mi? Karar verilebilir.
-    // Şimdilik devam ediyoruz ama Supabase başlatılamayacak.
   }
 
-  // Hive kullanımını geçici olarak atlayalım
   // 1. Hive Başlatma
-  // await Hive.initFlutter();
+  await Hive.initFlutter();
 
   // 2. Hive Adaptörlerini Kaydetme
   // Hive.registerAdapter(ChatMessageAdapter());
   // Hive.registerAdapter(ChatSessionAdapter());
-  // Hive.registerAdapter(DocumentFieldAdapter());
-  // Hive.registerAdapter(DocumentTemplateAdapter());
-  // Hive.registerAdapter(SavedDocumentDraftAdapter());
+  Hive.registerAdapter(DocumentFieldAdapter());
+  Hive.registerAdapter(DocumentTemplateAdapter());
+  Hive.registerAdapter(SavedDocumentDraftAdapter());
 
   // 3. Hive Kutularını Açma
   // await Hive.openBox<ChatMessage>(HiveBoxes.chatHistory);
   // await Hive.openBox<ChatSession>(HiveBoxes.chatSessions);
-  // await Hive.openBox<DocumentTemplate>(HiveBoxes.documentTemplates);
-  // await Hive.openBox<SavedDocumentDraft>(HiveBoxes.savedDrafts); // Opsiyonel MVP
+  await Hive.openBox<DocumentTemplate>(HiveBoxes.documentTemplates);
+  await Hive.openBox<SavedDocumentDraft>(HiveBoxes.savedDrafts);
+  await Hive.openBox(HiveBoxes.savedDocuments);
 
   // 4. Supabase Başlatma (.env'den okuyarak)
   final supabaseUrl = dotenv.env['SUPABASE_URL'];
@@ -61,7 +60,6 @@ Future<void> main() async {
 
   if (supabaseUrl == null || supabaseAnonKey == null) {
     print('Error: SUPABASE_URL or SUPABASE_ANON_KEY not found in .env file.');
-    // Bu durumda Supabase başlatılamaz, belki bir hata ekranı gösterilebilir?
   } else {
     await Supabase.initialize(
       url: supabaseUrl,
@@ -69,8 +67,8 @@ Future<void> main() async {
     );
   }
 
-  // 5. Şablonları Assets'ten Yükleme
-  // await TemplateLoader.loadInitialTemplatesIfNeeded(); // Call the loader
+  // 5. Belge şablonlarını yükle
+  // DocumentTemplateRepository sınıfı otomatik olarak ilk açılışta şablonları yükleyecek
 
   // Uygulamayı Riverpod ProviderScope ile sarmalayarak çalıştır
   runApp(
@@ -80,7 +78,7 @@ Future<void> main() async {
   );
 }
 
-// Örnek Ana Uygulama Widget'ı (app.dart içine taşınabilir)
+// Ana Uygulama Widget'ı
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
