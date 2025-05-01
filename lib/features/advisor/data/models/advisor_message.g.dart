@@ -1,22 +1,22 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'chat_message.dart';
+part of 'advisor_message.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
+class AdvisorMessageAdapter extends TypeAdapter<AdvisorMessage> {
   @override
   final int typeId = 0;
 
   @override
-  ChatMessage read(BinaryReader reader) {
+  AdvisorMessage read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return ChatMessage(
+    return AdvisorMessage(
       question: fields[0] as String,
       answer: fields[1] as String,
       timestamp: fields[2] as DateTime,
@@ -27,7 +27,7 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
   }
 
   @override
-  void write(BinaryWriter writer, ChatMessage obj) {
+  void write(BinaryWriter writer, AdvisorMessage obj) {
     writer
       ..writeByte(6)
       ..writeByte(0)
@@ -50,7 +50,7 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ChatMessageAdapter &&
+      other is AdvisorMessageAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
@@ -59,7 +59,8 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
 // JsonSerializableGenerator
 // **************************************************************************
 
-ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
+AdvisorMessage _$AdvisorMessageFromJson(Map<String, dynamic> json) =>
+    AdvisorMessage(
       question: json['question'] as String,
       answer: json['answer'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
@@ -68,7 +69,7 @@ ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
 
-Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
+Map<String, dynamic> _$AdvisorMessageToJson(AdvisorMessage instance) =>
     <String, dynamic>{
       'question': instance.question,
       'answer': instance.answer,

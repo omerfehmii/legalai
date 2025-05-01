@@ -34,6 +34,7 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.2.3
   flutter_markdown: ^0.7.1
+  google_fonts: ^6.1.0 # Fontları ekle
 
 dev_dependencies:
   flutter_test:
@@ -43,6 +44,7 @@ dev_dependencies:
   json_serializable: ^6.8.0 # Keep versions updated
   flutter_lints: ^3.0.0
   riverpod_generator: ^2.3.9
+  freezed: ^2.3.2 # If using freezed
 
 flutter:
   # The following line ensures that the Material Icons font is

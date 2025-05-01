@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; // Google Fonts importu
 
 class AppTheme {
   AppTheme._();
@@ -91,7 +92,7 @@ class AppTheme {
       scaffoldBackgroundColor: backgroundColor,
       cardColor: cardColor,
       hintColor: secondaryColor,
-      fontFamily: 'SF Pro Display', // Similar to Nixtio font
+      fontFamily: GoogleFonts.poppins().fontFamily, // Tüm temaya Poppins uygula
       
       colorScheme: ColorScheme.light(
         primary: primaryColor,
@@ -107,17 +108,23 @@ class AppTheme {
         brightness: Brightness.light,
       ),
 
-      textTheme: TextTheme(
-        displayLarge: headingLarge,
-        displayMedium: headingMedium,
-        displaySmall: headingSmall,
-        headlineMedium: headingMedium,
-        headlineSmall: headingSmall,
-        titleLarge: headingSmall,
-        bodyLarge: bodyLarge,
-        bodyMedium: bodyMedium,
-        bodySmall: caption,
-        labelLarge: bodyLarge.copyWith(fontWeight: FontWeight.w600),
+      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme).copyWith(
+        displayLarge: GoogleFonts.poppins(fontSize: 96, fontWeight: FontWeight.w300, letterSpacing: -1.5, color: textColor),
+        displayMedium: GoogleFonts.poppins(fontSize: 60, fontWeight: FontWeight.w300, letterSpacing: -0.5, color: textColor),
+        displaySmall: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.w400, color: textColor),
+        headlineMedium: GoogleFonts.poppins(fontSize: 34, fontWeight: FontWeight.w400, letterSpacing: 0.25, color: textColor),
+        headlineSmall: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w600, color: primaryColor),
+        titleLarge: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w500, letterSpacing: 0.15, color: textColor),
+        titleMedium: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w400, letterSpacing: 0.15, color: textColor),
+        titleSmall: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1, color: textColor),
+        bodyLarge: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w400, letterSpacing: 0.5, color: textColor, height: 1.45),
+        bodyMedium: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w400, letterSpacing: 0.25, color: mutedTextColor),
+        bodySmall: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w400, letterSpacing: 0.4, color: mutedTextColor),
+        labelLarge: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 1.25, color: Colors.white),
+        labelSmall: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w400, letterSpacing: 1.5, color: mutedTextColor),
+      ).apply(
+        bodyColor: textColor, 
+        displayColor: textColor,
       ),
 
       appBarTheme: AppBarTheme(

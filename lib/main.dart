@@ -5,8 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Hive Modellerini ve Adaptörlerini import et
-// import 'features/chat/data/models/chat_message.dart';
-// import 'features/chat/data/models/chat_session.dart';
+import 'features/advisor/data/models/advisor_message.dart';
+import 'features/advisor/data/models/advisor_session.dart';
 import 'features/documents/data/models/document_field.dart';
 import 'features/documents/data/models/document_template.dart';
 import 'features/documents/data/models/saved_document_draft.dart';
@@ -20,8 +20,8 @@ import 'core/theme/app_theme.dart'; // App theme'i import et
 
 // Hive Box isimleri için sabitler
 class HiveBoxes {
-  // static const String chatHistory = 'chatHistory';
-  // static const String chatSessions = 'chatSessions';
+  static const String chatHistory = 'advisorMessages';
+  static const String chatSessions = 'advisorSessions';
   static const String documentTemplates = 'document_templates';
   static const String savedDrafts = 'document_drafts';
   static const String savedDocuments = 'saved_documents';
@@ -41,15 +41,15 @@ Future<void> main() async {
   await Hive.initFlutter();
 
   // 2. Hive Adaptörlerini Kaydetme
-  // Hive.registerAdapter(ChatMessageAdapter());
-  // Hive.registerAdapter(ChatSessionAdapter());
+  Hive.registerAdapter(AdvisorMessageAdapter());
+  Hive.registerAdapter(AdvisorSessionAdapter());
   Hive.registerAdapter(DocumentFieldAdapter());
   Hive.registerAdapter(DocumentTemplateAdapter());
   Hive.registerAdapter(SavedDocumentDraftAdapter());
 
   // 3. Hive Kutularını Açma
-  // await Hive.openBox<ChatMessage>(HiveBoxes.chatHistory);
-  // await Hive.openBox<ChatSession>(HiveBoxes.chatSessions);
+  await Hive.openBox<AdvisorMessage>(HiveBoxes.chatHistory);
+  await Hive.openBox<AdvisorSession>(HiveBoxes.chatSessions);
   await Hive.openBox<DocumentTemplate>(HiveBoxes.documentTemplates);
   await Hive.openBox<SavedDocumentDraft>(HiveBoxes.savedDrafts);
   await Hive.openBox(HiveBoxes.savedDocuments);

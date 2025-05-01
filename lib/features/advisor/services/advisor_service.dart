@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:legalai/features/chat/data/models/chat_message.dart';
-import 'package:legalai/features/chat/data/models/chat_session.dart';
+import 'package:legalai/features/advisor/data/models/advisor_message.dart';
+import 'package:legalai/features/advisor/data/models/advisor_session.dart';
 import 'package:legalai/main.dart'; // HiveBoxes için
 // Yeni importlar
-import 'package:legalai/features/chat/providers/chat_providers.dart'; // DocumentGenerationStatus için
-import 'package:legalai/features/chat/data/models/ai_response.dart';
-import 'package:legalai/features/chat/data/models/generation_result.dart';
+import 'package:legalai/features/advisor/providers/advisor_providers.dart'; // DocumentGenerationStatus için
+import 'package:legalai/features/advisor/data/models/ai_response.dart';
+import 'package:legalai/features/advisor/data/models/generation_result.dart';
 import 'package:uuid/uuid.dart'; // Yeni session ID için
 
 // Supabase client instance'ı için provider (main.dart'ta initialize ediliyor)
@@ -19,50 +19,68 @@ final supabaseClientProvider = Provider<SupabaseClient>((ref) {
 // InMemoryStorage kaldırıldı
 
 // ChatService için provider (güncellendi)
-final chatServiceProvider = Provider<ChatService>((ref) {
+final advisorServiceProvider = Provider<AdvisorService>((ref) {
   final supabaseClient = ref.watch(supabaseClientProvider);
   // Hive kutularını al
-  final chatHistoryBox = Hive.box<ChatMessage>(HiveBoxes.chatHistory);
-  final chatSessionsBox = Hive.box<ChatSession>(HiveBoxes.chatSessions);
-  return ChatService(supabaseClient, chatHistoryBox, chatSessionsBox);
+  final historyBox = Hive.box<AdvisorMessage>(HiveBoxes.chatHistory);
+  final sessionsBox = Hive.box<AdvisorSession>(HiveBoxes.chatSessions);
+  return AdvisorService(supabaseClient, historyBox, sessionsBox);
 });
 
-class ChatService {
+class AdvisorService {
   final SupabaseClient _supabaseClient;
-  final Box<ChatMessage> _chatHistoryBox;
-  final Box<ChatSession> _chatSessionsBox;
+  final Box<AdvisorMessage> _historyBox;
+  final Box<AdvisorSession> _sessionsBox;
   final Uuid _uuid = Uuid(); // ID üretmek için
 
   // Constructor güncellendi
-  ChatService(this._supabaseClient, this._chatHistoryBox, this._chatSessionsBox);
+  AdvisorService(this._supabaseClient, this._historyBox, this._sessionsBox);
 
   // Eski askAI kaldırıldı
 
-  /// Kullanıcı girdisini ve sohbet durumunu işler, AI ile etkileşime girer.
+  /// Kullanıcı girdisini ve danışma durumunu işler, AI ile etkileşime girer.
   Future<AIResponse> processConversationTurn({
     required String userInput,
     required String chatId,
     required DocumentGenerationStatus currentStatus,
     required String? requestedDocumentType,
     required Map<String, String> currentCollectedData,
-    // List<ChatMessage>? previousMessages, // Opsiyonel: LLM'e geçmişi göndermek için
+    // List<AdvisorMessage>? previousMessages, // Bu parametre artık kullanılmayacak
   }) async {
     try {
-      print('Calling Supabase Edge Function: process-chat-turn');
+      print('Calling Supabase Edge Function: legal-query with status: ${currentStatus.name}');
       
+      // --- Get recent history from Hive ---
+      const int historyWindowSize = 10; // Match Edge Function window size
+      final List<AdvisorMessage> recentMessages = getHistoryForAdvisorSession(chatId).reversed.take(historyWindowSize).toList().reversed.toList();
+      
+      // Format history for the API (role/content map)
+      final historyForApi = recentMessages.map((msg) => {
+            'role': msg.isUserMessage ? 'user' : 'assistant',
+            // Dikkat: AI yanıtının tamamını (metadata dahil) göndermemeye dikkat et.
+            // Sadece metin kısmını (question veya answer'daki metin) gönderelim.
+            'content': msg.isUserMessage ? msg.question : msg.answer
+            // TODO: AI yanıtlarından metadata'yı temizlemek gerekebilir, şu an tüm `answer` gidiyor.
+            // Belki `legal-document` bloklarını da temizlemek iyi olabilir?
+      }).toList();
+      
+      // Add current user input to the history being sent
+      historyForApi.add({'role': 'user', 'content': userInput});
+      // --- End History Preparation ---
+
       // Edge Function'a gönderilecek veriler
       final requestBody = {
-        'userInput': userInput,
-        'chatId': chatId,
+        // 'userInput': userInput, // userInput artık history'nin son elemanı
+        // 'chatId': chatId, // chatID'yi göndermek gerekli mi? Edge function kullanmıyor gibi.
         'currentStatus': currentStatus.name, // Enum'ı string'e çevir
         'requestedDocumentType': requestedDocumentType,
         'currentCollectedData': currentCollectedData,
-        // 'history': previousMessages?.map((m) => m.toJson()).toList(), // Geçmişi JSON'a çevir
+        'history': historyForApi, // Hazırlanan geçmişi gönder
       };
       
       // Yeni Edge Function'ı çağır
       final response = await _supabaseClient.functions.invoke(
-        'process-chat-turn', // Yeni Edge Function adı
+        'legal-query', // Edge Function adı doğru
         body: requestBody, 
       );
 
@@ -98,14 +116,18 @@ class ChatService {
          return AIResponse(error: 'Fonksiyondan beklenmeyen formatta yanıt alındı.');
       }
 
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error in processConversationTurn: $e');
+      print('StackTrace: $stackTrace');
+      
       String errorMessage = 'Mesaj işlenirken bilinmeyen bir hata oluştu.';
-       if (e.toString().contains('NetworkError') || e.toString().contains('host lookup')) {
+      if (e is FunctionException) {
+        errorMessage = 'Fonksiyon hatası: ${e.toString()}';
+      } else if (e.toString().contains('NetworkError') || e.toString().contains('host lookup')) {
          errorMessage = 'İnternet bağlantınızı kontrol edin.';
-       } else if (e is Exception) {
+      } else if (e is Exception) {
          errorMessage = e.toString();
-       }
+      }
       return AIResponse(error: errorMessage);
     }
   }
@@ -165,7 +187,7 @@ class ChatService {
   Future<String> generateDocumentTextFromAI({
     required String documentType,
     required Map<String, String> data,
-    List<ChatMessage>? chatHistory, // Context için sohbet geçmişi (opsiyonel)
+    List<AdvisorMessage>? chatHistory, // Context için sohbet geçmişi (opsiyonel)
   }) async {
     print('Calling Supabase Edge Function: generate-text-from-ai');
 
@@ -207,16 +229,16 @@ class ChatService {
   // --- Hive Operasyonları ---
 
   // Yeni sohbet oturumu oluştur (Hive'a kaydet)
-  Future<ChatSession> createChatSession({String? title}) async {
+  Future<AdvisorSession> createAdvisorSession({String? title}) async {
     try {
       final sessionId = _uuid.v4();
-      final session = ChatSession(
+      final session = AdvisorSession(
         id: sessionId,
         title: title ?? 'Yeni Sohbet',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      await _chatSessionsBox.put(sessionId, session);
+      await _sessionsBox.put(sessionId, session);
       return session;
     } catch (e) {
       print('Error creating chat session in Hive: $e');
@@ -225,9 +247,9 @@ class ChatService {
   }
   
   // Mevcut sohbetleri al (Hive'dan)
-  List<ChatSession> getChatSessions() {
+  List<AdvisorSession> getAdvisorSessions() {
     try {
-      final sessions = _chatSessionsBox.values.toList();
+      final sessions = _sessionsBox.values.toList();
       sessions.sort((a, b) => b.updatedAt.compareTo(a.updatedAt)); // Son güncellenene göre sırala
       return sessions;
     } catch (e) {
@@ -236,20 +258,137 @@ class ChatService {
     }
   }
   
+  // AdvisorSessionsNotifier için eklediğimiz yeni metot
+  List<AdvisorSession> loadAdvisorSessions() {
+    return getAdvisorSessions();
+  }
+  
   // Belirli bir sohbet oturumunu al (Hive'dan)
-  ChatSession? getChatSessionById(String id) {
+  AdvisorSession? getAdvisorSessionById(String id) {
     try {
-      return _chatSessionsBox.get(id);
+      return _sessionsBox.get(id);
     } catch (e) {
       print('Error getting chat session by id from Hive: $e');
       return null;
     }
   }
+  
+  // Sohbet oturumu bilgisini almak için yeni metod
+  Future<AdvisorSession?> getAdvisorSessionInfo(String sessionId) async {
+    return getAdvisorSessionById(sessionId);
+  }
+  
+  // AdvisorNotifier sınıfı için gerekli metodları ekleyelim
+  Future<List<AdvisorMessage>> loadAdvisorMessages(String sessionId) async {
+    try {
+      final messages = _historyBox.values
+        .where((message) => message.chatId == sessionId)
+        .toList();
+      
+      messages.sort((a, b) => b.timestamp.compareTo(a.timestamp)); // En son mesaj en üstte
+      return messages;
+    } catch (e) {
+      print('Error loading chat messages from Hive: $e');
+      return [];
+    }
+  }
+  
+  // AI yanıtı almak için metot
+  Future<AIResponse> getAIResponse(String userMessage, List<AdvisorMessage> messages) async {
+    // Mesaj listesini OpenAI formatına dönüştür (en eski mesaj en başta)
+    List<Map<String, String>> historyForApi = messages.reversed.map((msg) {
+      return {
+        'role': msg.isUserMessage ? 'user' : 'assistant',
+        'content': msg.isUserMessage ? msg.question : msg.answer,
+      };
+    }).toList();
+
+    // Son kullanıcı mesajını da ekle (eğer messages listesinde yoksa)
+    // Not: AdvisorNotifier'daki _addMessage zaten state'e ekliyor, 
+    // bu yüzden messages listesi zaten son mesajı içermeli.
+    // Eğer processAdvisorUserMessage içinde _addMessage'dan *önce* getAIResponse çağrılsaydı
+    // buraya eklemek gerekirdi: historyForApi.add({'role': 'user', 'content': userMessage});
+
+    print('Sending history to legal-query: ${jsonEncode(historyForApi)}'); // Log history
+
+    try {
+      print('Calling Supabase Edge Function: legal-query with history');
+      final response = await _supabaseClient.functions.invoke(
+        'legal-query', 
+        body: {'history': historyForApi},
+      );
+
+      if (response.status != 200) {
+        final errorData = response.data as Map<String, dynamic>?;
+        final errorMessage = errorData?['error'] as String? ?? 'Fonksiyon hatası (status ${response.status}).';
+        print('Edge Function Error (legal-query): ${response.status} - $errorMessage');
+        return AIResponse(error: 'Yapay zeka ile iletişim kurulamadı: $errorMessage');
+      }
+
+      if (response.data is Map<String, dynamic>) {
+        final responseData = response.data as Map<String, dynamic>;
+        final aiAnswer = responseData['answer'] as String?;
+        print('Received answer from legal-query: $aiAnswer');
+        // Sadece responseText'i dolduruyoruz, diğer alanlar null kalacak
+        return AIResponse(responseText: aiAnswer);
+      } else {
+        print('Unexpected response data type from legal-query: ${response.data?.runtimeType}');
+        print('Response data content: ${response.data}');
+        return AIResponse(error: 'Fonksiyondan beklenmeyen formatta yanıt alındı.');
+      }
+
+    } catch (e, stackTrace) {
+      print('Error calling legal-query: $e');
+      print('StackTrace: $stackTrace');
+      String errorMessage = 'Mesaj işlenirken bilinmeyen bir hata oluştu.';
+      if (e is FunctionException) {
+        errorMessage = 'Fonksiyon hatası: ${e.toString()}';
+      } else if (e.toString().contains('NetworkError') || e.toString().contains('host lookup')) {
+        errorMessage = 'İnternet bağlantınızı kontrol edin.';
+      } else if (e is Exception) {
+        errorMessage = e.toString();
+      }
+      return AIResponse(error: errorMessage);
+    }
+    // Eski processConversationTurn çağrısını kaldırdık
+    /*
+    final chatId = messages.isNotEmpty ? messages.first.chatId : 'unknown';
+    
+    return await processConversationTurn(
+      userInput: userMessage, // Artık kullanılmıyor
+      chatId: chatId, // Artık kullanılmıyor
+      currentStatus: DocumentGenerationStatus.idle, // Artık kullanılmıyor
+      requestedDocumentType: null, // Artık kullanılmıyor
+      currentCollectedData: {}, // Artık kullanılmıyor
+      history: historyForApi // processConversationTurn'ü buna göre güncellemek lazım
+    );
+    */
+  }
+  
+  // Sohbet oturumunu silmek için metod
+  Future<void> deleteAdvisorSession(String sessionId) async {
+    try {
+      // Önce oturuma ait tüm mesajları bul ve sil
+      final messagesToDelete = _historyBox.values
+          .where((message) => message.chatId == sessionId)
+          .toList();
+          
+      for (var message in messagesToDelete) {
+        await _historyBox.delete(message.key);
+      }
+      
+      // Sonra oturumu sil
+      await _sessionsBox.delete(sessionId);
+    } catch (e) {
+      print('Error deleting chat session from Hive: $e');
+      rethrow;
+    }
+  }
 
   // Sohbet başlığını güncelle (Hive'da)
-  Future<void> updateChatSessionTitle(String chatId, String title) async {
+  Future<void> updateAdvisorSessionTitle(String sessionId, String title) async {
      try {
-       final session = _chatSessionsBox.get(chatId);
+       final session = _sessionsBox.get(sessionId);
        if (session != null) {
          session.title = title; // HiveObject olduğu için doğrudan güncellenebilir
          session.updatedAt = DateTime.now();
@@ -261,17 +400,17 @@ class ChatService {
   }
 
   // Sohbet mesajını kaydet (Hive'a)
-  Future<void> saveChatMessage(ChatMessage message) async {
+  Future<void> saveAdvisorMessage(AdvisorMessage message) async {
     try {
       // Mesaja benzersiz bir anahtar ata (eğer HiveObject değilse)
       // String messageKey = '${message.chatId}_${message.timestamp.millisecondsSinceEpoch}';
       // await _chatHistoryBox.put(messageKey, message);
       
       // HiveObject olduğu için doğrudan add kullanılabilir (otomatik artan anahtar)
-      await _chatHistoryBox.add(message);
+      await _historyBox.add(message);
       
       // Sohbet oturumunun güncelleme tarihini de güncelle
-      final session = _chatSessionsBox.get(message.chatId);
+      final session = _sessionsBox.get(message.chatId);
       if (session != null) {
         session.updatedAt = DateTime.now();
         await session.save();
@@ -282,10 +421,10 @@ class ChatService {
   }
 
   // Belirli bir sohbet oturumunun mesajlarını getir (Hive'dan)
-  List<ChatMessage> getChatHistoryForSession(String chatId) {
+  List<AdvisorMessage> getHistoryForAdvisorSession(String sessionId) {
     try {
-      final messages = _chatHistoryBox.values
-          .where((message) => message.chatId == chatId)
+      final messages = _historyBox.values
+          .where((message) => message.chatId == sessionId)
           .toList();
       messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       return messages;
@@ -296,32 +435,14 @@ class ChatService {
   }
 
   // Tüm sohbet geçmişini alma (Hive'dan)
-  List<ChatMessage> getAllChatHistory() {
+  List<AdvisorMessage> getAllChatHistory() {
     try {
-      final history = _chatHistoryBox.values.toList();
+      final history = _historyBox.values.toList();
       history.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       return history;
     } catch (e) {
       print('Error getting all chat history from Hive: $e');
       return [];
-    }
-  }
-
-  // Bir sohbet oturumunu sil (Hive'dan)
-  Future<void> deleteChatSession(String chatId) async {
-    try {
-      // İlgili oturumun mesajlarını sil
-      final messageKeys = _chatHistoryBox.keys.where((key) {
-        final message = _chatHistoryBox.get(key);
-        return message != null && message.chatId == chatId;
-      }).toList();
-      await _chatHistoryBox.deleteAll(messageKeys);
-      
-      // Oturumu sil
-      await _chatSessionsBox.delete(chatId);
-    } catch (e) {
-      print('Error deleting chat session from Hive: $e');
-      rethrow;
     }
   }
 } 

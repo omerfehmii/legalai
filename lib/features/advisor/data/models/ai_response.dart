@@ -1,4 +1,4 @@
-import 'package:legalai/features/chat/providers/chat_providers.dart'; // DocumentGenerationStatus için
+import 'package:legalai/features/advisor/providers/advisor_providers.dart';
 
 class AIResponse {
   final String? responseText;         // AI'ın metin cevabı veya sorusu

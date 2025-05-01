@@ -1,7 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:legalai/core/theme/app_theme.dart';
 
-// Simple typing indicator with animated dots
+// Yin Yang style orbiting dots indicator
 class TypingIndicator extends StatefulWidget {
   const TypingIndicator({super.key});
 
@@ -17,7 +18,7 @@ class _TypingIndicatorState extends State<TypingIndicator> with SingleTickerProv
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 2000), // Slower rotation for Yin Yang feel
     )..repeat();
   }
 
@@ -29,62 +30,72 @@ class _TypingIndicatorState extends State<TypingIndicator> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    // Align to left like an AI message bubble
+    // Align to left, provide some padding
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        margin: const EdgeInsets.only(bottom: 5, top: 5, right: 120), // Margin to keep it left-aligned
-        decoration: BoxDecoration(
-          color: Colors.white, // Match AI bubble color
-          borderRadius: const BorderRadius.only( // Match AI bubble shape
-             topLeft: Radius.circular(20),
-             topRight: Radius.circular(20),
-             bottomLeft: Radius.circular(4),
-             bottomRight: Radius.circular(20),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildDot(delay: 0),
-            const SizedBox(width: 4),
-            _buildDot(delay: 0.4),
-            const SizedBox(width: 4),
-            _buildDot(delay: 0.8),
-          ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final double angle = _controller.value * 2.0 * math.pi;
+            const double baseDotSize = 10.0; // Base size of the dots (Increased)
+            const double minScale = 0.5;   // Minimum size factor
+            const double maxScale = 1.5;   // Maximum size factor
+            const double orbitRadius = 9.0;  // Radius of the orbit
+
+            // Calculate scale based on sine wave (oscillates between minScale and maxScale)
+            // scale1 grows when sin(angle) is positive, scale2 grows when sin(angle) is negative
+            final double scale1 = minScale + (maxScale - minScale) * (1.0 + math.sin(angle)) / 2.0;
+            final double scale2 = minScale + (maxScale - minScale) * (1.0 - math.sin(angle)) / 2.0;
+
+            // Calculate positions based on angle and radius
+            final double x1 = orbitRadius * math.cos(angle);
+            final double y1 = orbitRadius * math.sin(angle);
+            // Second dot is on the opposite side
+            final double x2 = orbitRadius * math.cos(angle + math.pi); 
+            final double y2 = orbitRadius * math.sin(angle + math.pi);
+
+            // Calculate the required size for the container to hold the orbit + largest dot
+            const double containerSize = 2 * orbitRadius + baseDotSize * maxScale;
+
+            return SizedBox(
+              width: containerSize,
+              height: containerSize,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Dot 1 (Primary Color)
+                  Transform.translate(
+                    offset: Offset(x1, y1),
+                    child: _buildDot(AppTheme.primaryColor, baseDotSize, scale1),
+                  ),
+                  // Dot 2 (Grey Color)
+                  Transform.translate(
+                    offset: Offset(x2, y2),
+                    child: _buildDot(Colors.grey.shade400, baseDotSize, scale2),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  // Helper to build animated dots
-  Widget _buildDot({required double delay}) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        // Simple bounce effect using opacity
-        final double opacity = (((_controller.value + delay) % 1.0) < 0.5)
-            ? ((_controller.value + delay) % 0.5) * 2 // Fading in
-            : 1.0 - (((_controller.value + delay) % 0.5) * 2); // Fading out
-
-        return Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            // Use primary color for dots, adjust opacity
-            color: AppTheme.primaryColor.withOpacity(0.3 + (opacity * 0.7)),
-            shape: BoxShape.circle,
-          ),
-        );
-      },
+  // Helper to build a scaled dot
+  Widget _buildDot(Color color, double baseSize, double scale) {
+    final scaledSize = baseSize * scale;
+    // Ensure size doesn't become negative or too small due to floating point errors
+    final finalSize = math.max(0.1, scaledSize); 
+    return Container(
+      width: finalSize,
+      height: finalSize,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
     );
   }
 } 

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:legalai/core/theme/app_theme.dart';
-import 'package:legalai/features/chat/providers/chat_providers.dart';
-import 'package:legalai/features/chat/ui/screens/chat_screen.dart';
+import 'package:legalai/features/advisor/providers/advisor_providers.dart';
+import 'package:legalai/features/advisor/ui/screens/advisor_screen.dart';
 
-class ChatHistoryScreen extends ConsumerWidget {
-  const ChatHistoryScreen({Key? key}) : super(key: key);
+class AdvisorHistoryScreen extends ConsumerWidget {
+  const AdvisorHistoryScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionsState = ref.watch(chatSessionsProvider);
-    final sessionNotifier = ref.read(chatSessionsProvider.notifier);
+    final sessionsState = ref.watch(advisorSessionsProvider);
+    final sessionNotifier = ref.read(advisorSessionsProvider.notifier);
     
     // Date formatter
     final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
@@ -34,7 +34,7 @@ class ChatHistoryScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryColor),
-            onPressed: () => sessionNotifier.loadChatSessions(),
+            onPressed: () => ref.refresh(advisorSessionsProvider),
           ),
         ],
       ),
@@ -80,7 +80,7 @@ class ChatHistoryScreen extends ConsumerWidget {
                         );
                       },
                       onDismissed: (direction) {
-                        sessionNotifier.deleteSession(session.id);
+                        sessionNotifier.deleteAdvisorSession(session.id);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${session.title} silindi')),
                         );
@@ -108,7 +108,7 @@ class ChatHistoryScreen extends ConsumerWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChatScreen(chatId: session.id),
+                              builder: (context) => AdvisorScreen(chatId: session.id),
                             ),
                           );
                         },
@@ -120,7 +120,7 @@ class ChatHistoryScreen extends ConsumerWidget {
         onPressed: () async {
           Navigator.pushReplacement(
             context, 
-            MaterialPageRoute(builder: (context) => const ChatScreen())
+            MaterialPageRoute(builder: (context) => const AdvisorScreen())
           );
         },
         backgroundColor: AppTheme.primaryColor,

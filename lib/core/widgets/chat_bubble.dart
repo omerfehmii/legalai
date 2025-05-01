@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:legalai/core/theme/app_theme.dart'; // Assuming AppTheme provides necessary colors
+import 'package:legalai/core/theme/app_theme.dart'; // Import AppTheme
 
 class ChatBubble extends StatelessWidget {
   final String text;
   final bool isUserMessage;
   final String timestamp;
-  final Widget? leading; // Optional leading widget (e.g., for AI avatar)
+  final Widget? leading; // AI avatar
 
   const ChatBubble({
     super.key,
@@ -19,62 +19,71 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final alignment = isUserMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    // Slightly different colors/styles for user vs AI
-    final bubbleColor = isUserMessage ? AppTheme.primaryColor : Colors.grey[100]; // Lighter grey for AI
-    final textColor = isUserMessage ? Colors.white : Colors.black87; // White text on primary, dark on grey
     final bubbleAlignment = isUserMessage ? Alignment.centerRight : Alignment.centerLeft;
-    final margin = isUserMessage
-        ? const EdgeInsets.only(left: 50, top: 5, bottom: 5, right: 10) // Indent user messages more from left
-        : const EdgeInsets.only(right: 50, top: 5, bottom: 5, left: 10); // Indent AI messages more from right
-    final bubbleBorderRadius = BorderRadius.only(
-      topLeft: const Radius.circular(18),
-      topRight: const Radius.circular(18),
-      bottomLeft: Radius.circular(isUserMessage ? 18 : 4),
-      bottomRight: Radius.circular(isUserMessage ? 4 : 18),
+    
+    // --- New Colors --> Flat & Lighter --- 
+    final bubbleColor = isUserMessage ? AppTheme.secondaryColor : Colors.white;
+    final textColor = isUserMessage ? Colors.white : AppTheme.textColor;
+    
+    // --- Margins for Spacing --- 
+    // Increased vertical margin
+    final margin = EdgeInsets.only(
+      left: isUserMessage ? 60 : 16, // Indent user more, AI less (adjust as needed)
+      right: isUserMessage ? 16 : 60, // Indent AI more, user less
+      top: 8, 
+      bottom: 8, // Increased vertical spacing
     );
+    
+    // --- Symmetrical Rounded Corners --- 
+    final bubbleBorderRadius = BorderRadius.circular(16); // Consistent rounding
 
-    // Main content container (the bubble itself)
+    // --- Bubble Content --- 
     Widget bubbleContent = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), // Adjusted padding
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         color: bubbleColor,
         borderRadius: bubbleBorderRadius,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 4,
-            offset: const Offset(1, 2),
-          ),
-        ],
+        // --- REMOVE SHADOW for Flat Design ---
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black.withOpacity(0.04),
+        //     blurRadius: 8,
+        //     offset: const Offset(0, 2),
+        //   ),
+        // ],
       ),
       child: Text(
         text,
-        // Use theme's bodyLarge style and override color
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+        style: theme.textTheme.bodyLarge?.copyWith(
+              color: textColor, // Apply new text color
+              // Ensure font family from theme is used if needed
+              // fontFamily: theme.textTheme.bodyLarge?.fontFamily, 
+              height: 1.45, // Slightly increased line height for readability
+            ) ?? TextStyle( // Fallback style
               color: textColor,
-              height: 1.4, // Keep custom height if needed, or remove to use theme's default
-            ) ?? TextStyle( // Fallback if bodyLarge is somehow null
-              color: textColor,
-              fontSize: 15.5,
-              height: 1.35,
+              fontSize: 15,
+              height: 1.45,
             ),
       ),
     );
 
-    // Arrange leading widget (avatar) and bubble content
+    // --- Row for Avatar + Bubble (AI only) ---
     Widget messageRow = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min, // Take only needed space
+      mainAxisSize: MainAxisSize.min, 
+      crossAxisAlignment: CrossAxisAlignment.start, 
       children: [
-        if (leading != null && !isUserMessage) ...[
-          leading!,
-          const SizedBox(width: 8), // Space between avatar and bubble
+        if (!isUserMessage && leading != null) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 2), // Align avatar slightly better
+            child: leading!,
+          ),
+          const SizedBox(width: 10), // Space between avatar and bubble
         ],
-        // Use Flexible for the bubble itself to allow wrapping
-        Flexible(child: bubbleContent),
+        Flexible(child: bubbleContent), // Bubble takes remaining space
       ],
     );
-
+    
+    // --- Final Layout with Timestamp --- 
     return Container(
       margin: margin,
       alignment: bubbleAlignment,
@@ -82,19 +91,21 @@ class ChatBubble extends StatelessWidget {
         crossAxisAlignment: alignment,
         mainAxisSize: MainAxisSize.min,
         children: [
-          messageRow, // Use the Row containing avatar + bubble
+          // Use messageRow for AI, just bubbleContent for user
+          isUserMessage ? bubbleContent : messageRow,
           Padding(
             padding: EdgeInsets.only(
-              top: 5,
-              left: isUserMessage ? 0 : (leading != null ? 48 : 8), // Align timestamp under bubble
-              right: isUserMessage ? 8 : 0,
+              top: 6, // Space above timestamp
+              left: isUserMessage ? 0 : (leading != null ? 58 : 0), // Align under bubble/avatar
+              right: isUserMessage ? 4 : 0,
             ),
             child: Text(
               timestamp,
-              // Use theme's bodySmall style for timestamp (caption is assigned to bodySmall in our theme)
-              style: Theme.of(context).textTheme.bodySmall ?? TextStyle(
-                 fontSize: 10.5,
-                 color: Colors.grey[500],
+              style: theme.textTheme.bodySmall?.copyWith(
+                 color: AppTheme.mutedTextColor.withOpacity(0.8), // Make timestamp slightly fainter
+              ) ?? TextStyle(
+                 fontSize: 11, // Fallback size
+                 color: AppTheme.mutedTextColor.withOpacity(0.8),
               ),
             ),
           ),
