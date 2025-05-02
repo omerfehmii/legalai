@@ -283,10 +283,11 @@ class AdvisorNotifier extends StateNotifier<AdvisorState> {
   Future<void> processAdvisorUserMessage(String text) async {
     if (text.trim().isEmpty) return;
     
-    String currentChatId = state.currentChatId ?? 'unknown'; // Use a variable
+    String? currentChatId = state.currentChatId; // Use a nullable variable
 
-    // İlk mesajsa ve oturum ID'si yoksa yeni bir oturum başlat
-    if (state.messages.isEmpty && state.currentChatId == null) {
+    // Check if a chat session needs to be created (only if currentChatId is null)
+    if (currentChatId == null) {
+      print("[AdvisorNotifier] No current chatId found. Creating new session..."); // Log
       // Yeni oturum oluştur
       final newSession = await ref.read(advisorSessionsProvider.notifier).createNewSession();
       currentChatId = newSession.id; // Update currentChatId
@@ -294,8 +295,16 @@ class AdvisorNotifier extends StateNotifier<AdvisorState> {
         currentChatId: currentChatId, 
         currentChatTitle: newSession.title,
       );
+      print("[AdvisorNotifier] New session created: ID=$currentChatId"); // Log
     }
-    
+
+    // Ensure chatId is definitely not null before proceeding
+    if (currentChatId == null) {
+      print("[AdvisorNotifier] !!!!! ERROR: currentChatId is still null after potential creation. Aborting. !!!!!");
+      state = state.copyWith(errorMessage: "Oturum başlatılamadı.", isLoading: false);
+      return;
+    }   
+
     // Kullanıcı mesajını ekle
     _addMessage(text, true);
     
@@ -303,10 +312,10 @@ class AdvisorNotifier extends StateNotifier<AdvisorState> {
     state = state.copyWith(isLoading: true, clearError: true);
     
     try {
-      // İlk mesaj ise başlığı güncelle (Bu mantık kalabilir)
-      // if (state.messages.length == 1) { // state.messages güncellendiği için kontrol 2 olmalı
-      if (state.messages.where((m) => m.isUserMessage).length == 1) { // Sadece kullanıcı mesajlarını say
-        await _updateAdvisorChatTitle(text);
+      // İlk KULLANICI mesajı ise başlığı güncelle (Bu mantık kalabilir)
+      if (state.messages.where((m) => m.isUserMessage).length == 1) { 
+         print("[AdvisorNotifier] First user message detected. Updating title..."); // Log
+         await _updateAdvisorChatTitle(text);
       }
       
       // ---- AI cevabı al (Güncellenmiş Servis Çağrısı) ----
@@ -341,7 +350,7 @@ class AdvisorNotifier extends StateNotifier<AdvisorState> {
       }
       // ---- End State Update ----
 
-    } catch (e) {
+     } catch (e) {
       // Catch errors from the service call itself (network etc.)
       state = state.copyWith(
         errorMessage: 'Mesaj işlenirken bir hata oluştu: ${e.toString()}',

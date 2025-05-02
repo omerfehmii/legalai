@@ -67,7 +67,7 @@ class AdvisorService {
       // Add current user input to the history being sent
       historyForApi.add({'role': 'user', 'content': userInput});
       // --- End History Preparation ---
-
+      
       // Edge Function'a gönderilecek veriler
       final requestBody = {
         // 'userInput': userInput, // userInput artık history'nin son elemanı
@@ -228,21 +228,24 @@ class AdvisorService {
 
   // --- Hive Operasyonları ---
 
-  // Yeni sohbet oturumu oluştur (Hive'a kaydet)
+  // Yeni sohbet oturumu oluştur (Hive\'a kaydet)
   Future<AdvisorSession> createAdvisorSession({String? title}) async {
+    final sessionId = _uuid.v4();
+    print("[AdvisorService] Attempting to create session: ID=$sessionId, Title=${title ?? 'Yeni Sohbet'}"); // Log 1
     try {
-      final sessionId = _uuid.v4();
       final session = AdvisorSession(
         id: sessionId,
         title: title ?? 'Yeni Sohbet',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
+      print("[AdvisorService] Session object created. Attempting to put into Hive box..."); // Log 2
       await _sessionsBox.put(sessionId, session);
+      print("[AdvisorService] Successfully put session ID=$sessionId into Hive box."); // Log 3
       return session;
     } catch (e) {
-      print('Error creating chat session in Hive: $e');
-      rethrow;
+      print('[AdvisorService] !!!!! ERROR creating/putting chat session in Hive: $e !!!!!'); // Log 4 (Error)
+      rethrow; // Keep rethrowing
     }
   }
   
@@ -285,7 +288,7 @@ class AdvisorService {
         .where((message) => message.chatId == sessionId)
         .toList();
       
-      messages.sort((a, b) => b.timestamp.compareTo(a.timestamp)); // En son mesaj en üstte
+      messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       return messages;
     } catch (e) {
       print('Error loading chat messages from Hive: $e');
@@ -385,18 +388,23 @@ class AdvisorService {
     }
   }
 
-  // Sohbet başlığını güncelle (Hive'da)
+  // Sohbet başlığını güncelle (Hive\'da)
   Future<void> updateAdvisorSessionTitle(String sessionId, String title) async {
-     try {
-       final session = _sessionsBox.get(sessionId);
-       if (session != null) {
-         session.title = title; // HiveObject olduğu için doğrudan güncellenebilir
-         session.updatedAt = DateTime.now();
-         await session.save(); // Değişikliği kaydet
-       }
-     } catch (e) {
-       print('Error updating chat session title in Hive: $e');
-     }
+    print("[AdvisorService] Attempting to update title for session ID=$sessionId to '$title'"); // Log 5
+    try {
+      final session = _sessionsBox.get(sessionId);
+      if (session != null) {
+        print("[AdvisorService] Session found. Updating title and timestamp..."); // Log 6
+        session.title = title; // HiveObject olduğu için doğrudan güncellenebilir
+        session.updatedAt = DateTime.now();
+        await session.save(); // Değişikliği kaydet
+        print("[AdvisorService] Successfully saved updated session ID=$sessionId."); // Log 7
+      } else {
+        print("[AdvisorService] !!!!! WARNING: Session ID=$sessionId not found in Hive box for title update. !!!!!"); // Log 8 (Warning)
+      }
+    } catch (e) {
+      print('[AdvisorService] !!!!! ERROR updating chat session title in Hive: $e !!!!!'); // Log 9 (Error)
+    }
   }
 
   // Sohbet mesajını kaydet (Hive'a)

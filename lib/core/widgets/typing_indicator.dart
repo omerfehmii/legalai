@@ -74,9 +74,9 @@ class _TypingIndicatorState extends State<TypingIndicator> with SingleTickerProv
                   Transform.translate(
                     offset: Offset(x2, y2),
                     child: _buildDot(Colors.grey.shade400, baseDotSize, scale2),
-                  ),
-                ],
-              ),
+            ),
+          ],
+        ),
             );
           },
         ),
@@ -89,13 +89,13 @@ class _TypingIndicatorState extends State<TypingIndicator> with SingleTickerProv
     final scaledSize = baseSize * scale;
     // Ensure size doesn't become negative or too small due to floating point errors
     final finalSize = math.max(0.1, scaledSize); 
-    return Container(
+        return Container(
       width: finalSize,
       height: finalSize,
-      decoration: BoxDecoration(
+          decoration: BoxDecoration(
         color: color,
-        shape: BoxShape.circle,
-      ),
+            shape: BoxShape.circle,
+          ),
     );
   }
 } 

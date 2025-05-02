@@ -125,8 +125,8 @@ Deno.serve(async (req) => {
         for (const msg of history) {
             if (!msg || typeof msg.role !== 'string' || typeof msg.content !== 'string' || (msg.role !== 'user' && msg.role !== 'assistant')) {
                 return new Response(JSON.stringify({ error: 'Geçersiz mesaj formatı gönderildi' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
-            }
-        }
+      }
+    }
     }
     if (requestedDocumentType !== undefined && requestedDocumentType !== null && typeof requestedDocumentType !== 'string') {
       return new Response(JSON.stringify({ error: 'Geçersiz belge türü formatı (requestedDocumentType)' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
     if (!openAiKey) {
         // Throwing error here was the original pattern, let's stick to it for now
         // unless console.error and returning Response is preferred system-wide.
-       throw new Error('OPENAI_API_KEY bulunamadı');
+      throw new Error('OPENAI_API_KEY bulunamadı');
     }
     const openai = new OpenAI({ apiKey: openAiKey });
 

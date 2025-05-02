@@ -21,12 +21,16 @@ import '../widgets/confirmation_card.dart';
 import '../widgets/document_ready_bubble.dart';
 import 'package:legalai/screens/pdf_viewer_screen.dart'; // Import PdfViewerScreen
 import 'package:legalai/features/advisor/providers/advisor_providers.dart'; // Tam import yolu ile
+import 'package:legalai/features/advisor/ui/screens/advisor_history_screen.dart'; // Add import for the history screen
+import 'package:legalai/features/advisor/data/models/advisor_session.dart'; // Needed for drawer type
 
 class AdvisorScreen extends ConsumerStatefulWidget {
   final bool startWithDocumentPrompt; // Add argument
+  final String? chatId; // Add optional chatId for loading history
 
   const AdvisorScreen({
     super.key,
+    this.chatId, // Initialize chatId
     this.startWithDocumentPrompt = false, // Default to false
   });
 
@@ -45,10 +49,17 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Use the renamed provider
-      ref.read(advisorNotifierProvider.notifier).initializeChat(
-        startWithDocumentPrompt: widget.startWithDocumentPrompt
-      );
+      // Check if a specific chat needs to be loaded
+      if (widget.chatId != null) {
+        print("Loading existing chat with ID: ${widget.chatId}"); // Debug log
+        ref.read(advisorNotifierProvider.notifier).loadAdvisorChat(widget.chatId!);
+      } else {
+        // Otherwise, initialize a new chat
+        print("Initializing new chat. startWithDocumentPrompt: ${widget.startWithDocumentPrompt}"); // Debug log
+        ref.read(advisorNotifierProvider.notifier).initializeChat(
+          startWithDocumentPrompt: widget.startWithDocumentPrompt
+        );
+      }
     });
   }
   
@@ -161,22 +172,33 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
         elevation: 0, 
         // shape: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1.0)), // Alt çizgi yoktu
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.primaryColor, size: 28), 
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.primaryColor, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Advisor', 
+          advisorState.currentChatTitle ?? "AI Danışman",
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 20, 
+                fontSize: 20,
                 color: AppTheme.primaryColor,
                 ),
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          // Actions boş
-        ],
-      ),
+          // Wrap IconButton with a Builder and use double quotes for tooltip
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.history_rounded, color: AppTheme.primaryColor, size: 26),
+              tooltip: "Geçmiş Görüşmeler",
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer();
+              },
+            ),
+          ),
+        ], // Correct closing bracket for actions
+      ), // AppBar closing parenthesis
+      // Add the endDrawer property
+      endDrawer: const AdvisorHistoryDrawer(), // Use the new drawer widget
       body: Column(
         children: [
           Expanded(
@@ -533,6 +555,111 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// --- New Widget for the End Drawer ---
+class AdvisorHistoryDrawer extends ConsumerWidget {
+  const AdvisorHistoryDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionsState = ref.watch(advisorSessionsProvider);
+    final sessionNotifier = ref.read(advisorSessionsProvider.notifier);
+    final advisorNotifier = ref.read(advisorNotifierProvider.notifier);
+    final DateFormat formatter = DateFormat('dd MMM, HH:mm'); // Simple date format
+
+    return Drawer(
+      child: Column(
+        children: [
+          // Drawer Header
+          AppBar(
+            title: const Text('Geçmiş Görüşmeler'),
+            titleTextStyle: TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0.5,
+            automaticallyImplyLeading: false, // Remove back button from drawer header
+            actions: [
+               IconButton(
+                 icon: const Icon(Icons.close, color: AppTheme.primaryColor),
+                 tooltip: 'Kapat',
+                 onPressed: () => Navigator.pop(context), // Close the drawer
+               ),
+             ],
+          ),
+          // Body of the Drawer (List or States)
+          Expanded(
+            child: _buildDrawerBody(context, sessionsState, sessionNotifier, advisorNotifier, formatter, ref),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerBody(
+    BuildContext context,
+    AdvisorSessionsState sessionsState,
+    AdvisorSessionsNotifier sessionNotifier,
+    AdvisorNotifier advisorNotifier,
+    DateFormat formatter,
+    WidgetRef ref,
+  ) {
+    if (sessionsState.isLoading) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+
+    if (sessionsState.errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text('Hata: ${sessionsState.errorMessage!}', textAlign: TextAlign.center),
+        ),
+      );
+    }
+
+    if (sessionsState.sessions.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text('Kaydedilmiş görüşme yok.', style: TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
+
+    // Session List
+    return ListView.builder(
+      padding: EdgeInsets.zero, // Remove padding for drawer list
+      itemCount: sessionsState.sessions.length,
+      itemBuilder: (context, index) {
+        final session = sessionsState.sessions[index];
+        return ListTile(
+           leading: const Icon(Icons.chat_bubble_outline, size: 20, color: AppTheme.secondaryColor),
+           title: Text(
+             session.title,
+             maxLines: 1,
+             overflow: TextOverflow.ellipsis,
+             style: const TextStyle(fontWeight: FontWeight.w500),
+           ),
+           subtitle: Text(
+             formatter.format(session.updatedAt),
+             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+           ),
+           onTap: () {
+             Navigator.pop(context); // Close the drawer
+             // Check if the tapped chat is already loaded
+             if (ref.read(advisorNotifierProvider).currentChatId != session.id) {
+                 advisorNotifier.loadAdvisorChat(session.id); // Load the selected chat
+             }
+           },
+           // Simple trailing icon, maybe add delete later if needed
+           // trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+        );
+      },
     );
   }
 } 
