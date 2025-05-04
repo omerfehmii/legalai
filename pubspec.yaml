@@ -35,6 +35,11 @@ dependencies:
   shared_preferences: ^2.2.3
   flutter_markdown: ^0.7.1
   google_fonts: ^6.1.0 # Fontları ekle
+  file_picker: ^8.0.3 # Add file_picker
+  google_mlkit_text_recognition: ^0.11.0 # Google ML Kit Text Recognition
+  image_picker: ^1.0.7 # Kamera ve galeri erişimi için
+  camera: ^0.10.5+9 # Kamera erişimi için
+  syncfusion_flutter_pdfviewer: ^29.1.38
 
 dev_dependencies:
   flutter_test:
@@ -54,9 +59,13 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/templates/ # Şablon JSON dosyalarını içeren klasör
+    # - assets/templates/ # Şablon JSON dosyalarını içeren klasör - Kaldırıldı
     - assets/images/ # A4 kağıdı gibi görselleri içeren klasör
     - .env
+    - assets/logo.png # Logo eklendi
+    - assets/dilekçe.jpg # Dilekçe örneği eklendi
+    - assets/fonts/Roboto-Regular.ttf # Add Roboto font for Turkish character support
+    # - assets/tessdata/ # Remove tessdata path
     # - images/a_dot_burr.jpeg
     # - images/a_dot_ham.jpeg
 

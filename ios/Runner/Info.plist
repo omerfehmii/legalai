@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Bu uygulama belge tarama için kameranıza erişim istemektedir.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Bu uygulama belgelerinizi taramak için galerinize erişim istemektedir.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Bu uygulama belge tarama için mikrofonunuza erişim istemektedir.</string>
 </dict>
 </plist>

@@ -1,0 +1,35 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Saved Documents Feature
+
+This rule outlines the components involved in the "Saved Documents" feature, where generated legal documents are stored and displayed.
+
+## User Interface
+
+*   `[SavedDocumentsScreen](mdc:lib/screens/saved_documents_screen.dart)`: Displays a list of documents saved locally. Handles loading, empty, error, and data states. Allows users to view document details (like title and date) and delete saved documents.
+*   Navigation to this screen is typically from `[HomeScreen](mdc:lib/screens/home_screen.dart)`.
+
+## State Management
+
+*   `[GeneratorNotifier](mdc:lib/providers/generator_provider.dart)`: Although primarily for generation, it triggers the saving process by calling `AdvisorService.saveGeneratedDocument` upon successful document creation.
+*   `[savedDocumentsProvider](mdc:lib/providers/saved_documents_provider.dart)` (Riverpod `FutureProvider`): Asynchronously fetches the list of `[SavedDocument](mdc:lib/models/saved_document.dart)` objects from `[AdvisorService](mdc:lib/services/advisor_service.dart)`.
+*   `[SavedDocumentsScreen](mdc:lib/screens/saved_documents_screen.dart)` consumes `savedDocumentsProvider` to display the list and handles deletion logic (calling the service and potentially refreshing the provider).
+
+## Service Layer
+
+*   `[AdvisorService](mdc:lib/services/advisor_service.dart)`:
+    *   `saveGeneratedDocument(SavedDocument document)`: Saves a `[SavedDocument](mdc:lib/models/saved_document.dart)` object to the `saved_documents` Hive box.
+    *   `loadSavedDocuments()`: Retrieves all `[SavedDocument](mdc:lib/models/saved_document.dart)` objects from the `saved_documents` Hive box.
+    *   `deleteSavedDocument(String id)`: Deletes a document from the `saved_documents` Hive box using its ID.
+
+## Data Model
+
+*   `[SavedDocument](mdc:lib/models/saved_document.dart)`: Represents a saved document. Contains fields like `id`, `title`, `content`, `createdAt`. Annotated with `@HiveType` for Hive persistence.
+*   `[SavedDocumentAdapter](mdc:lib/models/saved_document.dart)`: The Hive TypeAdapter (`.g.dart`) for serializing/deserializing `SavedDocument` objects.
+
+## Persistence
+
+*   Data is stored in the `saved_documents` Hive box. See `[state_and_persistence.mdc](mdc:.cursor/rules/state_and_persistence.mdc)` for details.

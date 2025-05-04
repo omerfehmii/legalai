@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -8,23 +10,36 @@ import 'package:intl/intl.dart';
 
 /// PDF belge taslağı oluşturmaktan sorumlu servis sınıfı
 class DocumentGenerationService {
-  /// Bir belge şablonu ve doldurulmuş alanlarla PDF belgesi oluşturur
-  /// [template] - PDF'in temelini oluşturan belge şablonu
-  /// [fieldValues] - Şablondaki yer tutucuları değiştirmek için alan değerleri
+  // Convert Turkish characters to ASCII equivalents
+  String _normalizeText(String text) {
+    return text
+        .replaceAll('ı', 'i')
+        .replaceAll('İ', 'I')
+        .replaceAll('ğ', 'g')
+        .replaceAll('Ğ', 'G')
+        .replaceAll('ü', 'u')
+        .replaceAll('Ü', 'U')
+        .replaceAll('ş', 's')
+        .replaceAll('Ş', 'S')
+        .replaceAll('ç', 'c')
+        .replaceAll('Ç', 'C')
+        .replaceAll('ö', 'o')
+        .replaceAll('Ö', 'O');
+  }
+
+  /// Ham metin içeriğinden bir PDF belgesi oluşturur ve kaydeder
+  /// [content] - PDF'e yazılacak ham metin içeriği
+  /// [documentName] - Oluşturulacak PDF'in başlığı ve dosya adı için temel
   /// 
   /// Oluşturulan PDF dosyasının yolunu döndürür
-  Future<String> generatePdfDocument(
-    DocumentTemplate template,
-    Map<String, dynamic> fieldValues,
-  ) async {
+  Future<String> generatePdfFromContent(String content, String documentName) async {
     try {
-      // PDF oluştur
+      // Normalize text for PDF compatibility (convert Turkish characters to ASCII)
+      String normalizedContent = _normalizeText(content);
+      String normalizedTitle = _normalizeText(documentName);
+      
       final pdf = pw.Document();
-      
-      // Şablon metnini alıp, alan değerleriyle yer tutucuları değiştir
-      String finalContent = _replacePlaceholders(template.templateText, fieldValues);
-      
-      // Türkçe karakter desteği için font kodlamasını dikkate almalısınız
+
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -35,7 +50,7 @@ class DocumentGenerationService {
                 // Başlık
                 pw.Center(
                   child: pw.Text(
-                    template.name,
+                    normalizedTitle,
                     style: pw.TextStyle(
                       fontSize: 18,
                       fontWeight: pw.FontWeight.bold,
@@ -43,27 +58,27 @@ class DocumentGenerationService {
                   ),
                 ),
                 pw.SizedBox(height: 20),
-                
+
                 // Belge içeriği
-                pw.Text(finalContent),
-                
-                // Yasal uyarı
+                pw.Text(normalizedContent),
+
+                // Yasal uyarı (ASCII versiyonu)
                 pw.SizedBox(height: 30),
                 pw.Divider(),
                 pw.Text(
-                  'YASAL UYARI: Bu belge AI Avukat Asistanı ile oluşturulmuş bir taslaktır. '
-                  'Yasal bağlayıcılığı yoktur ve profesyonel hukuki tavsiye yerine geçmez. '
-                  'Kullanmadan önce avukatınıza danışın.',
+                  'YASAL UYARI: Bu belge AI Avukat Asistani ile olusturulmus bir taslaktir. '
+                  'Yasal baglayiciligi yoktur ve profesyonel hukuki tavsiye yerine gecmez. '
+                  'Kullanmadan once avukatiniza danisin.',
                   style: pw.TextStyle(
                     fontSize: 8,
                     fontStyle: pw.FontStyle.italic,
                   ),
                 ),
-                
+
                 // Oluşturulma tarihi
                 pw.SizedBox(height: 5),
                 pw.Text(
-                  'Oluşturulma Tarihi: ${_getCurrentDate()}',
+                  'Olusturulma Tarihi: ${_getCurrentDate()}',
                   style: pw.TextStyle(fontSize: 8),
                 ),
               ],
@@ -71,16 +86,22 @@ class DocumentGenerationService {
           },
         ),
       );
-      
+
       // Dosyayı kaydet
-      final output = await getTemporaryDirectory();
+      final output = await getTemporaryDirectory(); // Use temporary dir for generated docs
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-      final file = File('${output.path}/belge_${timestamp}.pdf');
+      // Sanitize documentName for use in file name
+      final fileNameBase = _normalizeText(documentName)
+          .replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_')
+          .toLowerCase();
+      final file = File('${output.path}/${fileNameBase}_${timestamp}.pdf');
       await file.writeAsBytes(await pdf.save());
-      
+
       return file.path;
     } catch (e) {
-      throw Exception('PDF generation error: $e');
+      // Log the error for debugging
+      print('Error generating PDF from content: $e');
+      throw Exception('PDF generation from content error: $e');
     }
   }
   
@@ -102,8 +123,9 @@ class DocumentGenerationService {
     return result;
   }
   
-  /// Güncel tarihi Türkçe formatla döndürür
+  /// Güncel tarihi ASCII formatla döndürür
   String _getCurrentDate() {
-    return DateFormat('dd.MM.yyyy').format(DateTime.now());
+    String date = DateFormat('dd.MM.yyyy').format(DateTime.now());
+    return _normalizeText(date);
   }
 } 

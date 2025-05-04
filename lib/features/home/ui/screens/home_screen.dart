@@ -5,9 +5,9 @@ import 'package:card_swiper/card_swiper.dart';
 import 'dart:ui'; // For ImageFilter
 import 'package:legalai/core/theme/app_theme.dart';
 import 'package:legalai/features/advisor/ui/screens/advisor_screen.dart';
-import 'package:legalai/features/generator/ui/generator_screen.dart';
-import 'package:legalai/features/documents/ui/screens/document_template_list_screen.dart';
 import 'package:legalai/screens/saved_documents_screen.dart';
+// import 'package:legalai/features/document_analysis/ui/screens/document_analysis_screen.dart'; // Kaldırıldı
+import 'package:legalai/features/document_scanner/ui/screens/document_scanner_screen.dart';
 
 // Hangi içeriğin gösterileceğini belirten enum
 enum HomeScreenContent {
@@ -303,10 +303,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Scan',
               subtitle: 'Documents, ID cards...',
               onTap: () {
-                // Placeholder action
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   const SnackBar(content: Text('Tarama özelliği yakında!'), duration: Duration(seconds: 2)),
-                 );
+                // Yeni DocumentScannerScreen'e yönlendir
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DocumentScannerScreen()),
+                );
               },
           ),
             
@@ -317,14 +318,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'Create',
               subtitle: 'Sign, add text, mark...',
               onTap: () {
-                 // Placeholder action (previously navigated to DocumentTemplateListScreen)
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   const SnackBar(content: Text('Oluşturma özelliği yakında!'), duration: Duration(seconds: 2)),
-                 );
-                 // Navigator.push(
-                 //   context,
-                 //   MaterialPageRoute(builder: (context) => const DocumentTemplateListScreen()),
-                 // );
+                // AdvisorScreen'e özel parametre ile git (aynı işlevsellik + butonu gibi)
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdvisorScreen(startWithDocumentPrompt: true),
+                  ),
+                );
               },
           ),
             

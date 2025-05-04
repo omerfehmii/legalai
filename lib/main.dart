@@ -10,6 +10,7 @@ import 'features/advisor/data/models/advisor_session.dart';
 import 'features/documents/data/models/document_field.dart';
 import 'features/documents/data/models/document_template.dart';
 import 'features/documents/data/models/saved_document_draft.dart';
+import 'features/documents/data/models/saved_document.dart'; // Import SavedDocument
 import 'core/hive/template_loader.dart'; // TemplateLoader'ı import et
 // import 'features/chat/ui/screens/chat_screen.dart';
 import 'features/home/ui/screens/home_screen.dart'; // HomeScreen'i import et
@@ -46,13 +47,14 @@ Future<void> main() async {
   Hive.registerAdapter(DocumentFieldAdapter());
   Hive.registerAdapter(DocumentTemplateAdapter());
   Hive.registerAdapter(SavedDocumentDraftAdapter());
+  Hive.registerAdapter(SavedDocumentAdapter());
 
   // 3. Hive Kutularını Açma
   await Hive.openBox<AdvisorMessage>(HiveBoxes.chatHistory);
   await Hive.openBox<AdvisorSession>(HiveBoxes.chatSessions);
   await Hive.openBox<DocumentTemplate>(HiveBoxes.documentTemplates);
   await Hive.openBox<SavedDocumentDraft>(HiveBoxes.savedDrafts);
-  await Hive.openBox(HiveBoxes.savedDocuments);
+  await Hive.openBox<SavedDocument>(HiveBoxes.savedDocuments);
 
   // 4. Supabase Başlatma (.env'den okuyarak)
   final supabaseUrl = dotenv.env['SUPABASE_URL'];

@@ -27,11 +27,13 @@ import 'package:legalai/features/advisor/data/models/advisor_session.dart'; // N
 class AdvisorScreen extends ConsumerStatefulWidget {
   final bool startWithDocumentPrompt; // Add argument
   final String? chatId; // Add optional chatId for loading history
+  final String? initialMessage; // Add initialMessage for document scanner
 
   const AdvisorScreen({
     super.key,
     this.chatId, // Initialize chatId
     this.startWithDocumentPrompt = false, // Default to false
+    this.initialMessage, // Initialize initialMessage
   });
 
   @override
@@ -59,6 +61,14 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
         ref.read(advisorNotifierProvider.notifier).initializeChat(
           startWithDocumentPrompt: widget.startWithDocumentPrompt
         );
+        
+        // If we have an initial message from document scanner, process it
+        if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
+          // Use a slight delay to ensure chat is initialized
+          Future.delayed(const Duration(milliseconds: 300), () {
+            ref.read(advisorNotifierProvider.notifier).processAdvisorUserMessage(widget.initialMessage!);
+          });
+        }
       }
     });
   }
