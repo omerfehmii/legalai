@@ -20,7 +20,7 @@ LegalAI, hukuki konularda yapay zeka destekli danışmanlık ve belge yönetimi 
 
 1. Repoyu klonlayın:
 ```
-git clone https://github.com/kullaniciadi/legalai.git
+git clone https://github.com/omerfehmii/legalai.git
 ```
 
 2. Bağımlılıkları yükleyin:
