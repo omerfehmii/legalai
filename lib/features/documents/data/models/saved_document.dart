@@ -19,7 +19,7 @@ class SavedDocument extends HiveObject {
 
   @HiveField(4)
   late DateTime createdAt; // Timestamp when saved
-  
+
   @HiveField(5)
   String? pdfPath; // Path to the generated PDF file
   

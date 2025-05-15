@@ -7,7 +7,7 @@ import 'package:legalai/core/theme/app_theme.dart';
 import 'package:legalai/features/advisor/ui/screens/advisor_screen.dart';
 import 'package:legalai/screens/saved_documents_screen.dart';
 // import 'package:legalai/features/document_analysis/ui/screens/document_analysis_screen.dart'; // Kaldırıldı
-import 'package:legalai/features/document_scanner/ui/screens/document_scanner_screen.dart';
+// import 'package:legalai/features/document_scanner/ui/screens/document_scanner_screen.dart'; // Scan özelliği kaldırıldı
 
 // Hangi içeriğin gösterileceğini belirten enum
 enum HomeScreenContent {
@@ -33,7 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
-  // Example document models - fetch from database in real app
+  // Örnek belge modelleri
   final List<DocumentModel> documents = const [
     DocumentModel(
       id: '1',
@@ -154,14 +154,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             
-            // Add button on right side
+            // Ask AI quick button on right side (Changed from Add)
             GestureDetector(
               onTap: () {
-                // AdvisorScreen'e özel parametre ile git
+                // Ask AI özelliğini başlat (parametre olmadan)
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const AdvisorScreen(startWithDocumentPrompt: true),
+                    builder: (context) => const AdvisorScreen(),
                   ),
                 );
               },
@@ -173,9 +173,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   borderRadius: BorderRadius.circular(28),
                 ),
                 child: const Icon(
-                  Icons.add,
+                  Icons.chat_bubble_outline,
                   color: AppTheme.secondaryColor,
-                  size: 30,
+                  size: 26,
                 ),
               ),
             ),
@@ -246,7 +246,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     child: const Center(
                       child: Text(
-                        "5",
+                        "3",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -261,11 +261,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         
-        const SizedBox(height: 40),
+        const SizedBox(height: 30),
         
         // Greeting text
         Text(
-          'Hi Nixtio,',
+          'Merhaba,',
           style: TextStyle(
             color: Colors.grey[600],
             fontWeight: FontWeight.w500,
@@ -276,7 +276,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         
         // Main heading
         Text(
-          'How can I help\nyou today?',
+          'Hukuki asistanınız\nyanınızda',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 40,
@@ -285,40 +285,119 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         
-        const SizedBox(height: 40),
+        const SizedBox(height: 25),
         
-        // Main feature buttons - 2x2 grid
+        // Vurgulanan Ask AI özelliği - Ana kısımda gösterilen dikkat çekici kutu
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AdvisorScreen()),
+            );
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.secondaryColor,
+                  AppTheme.secondaryColor.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.secondaryColor.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.smart_toy_outlined,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Yapay Zeka Hukuk Asistanı',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Hukuki sorularınızı sorun, belge oluşturun',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 30),
+        
+        // Main feature buttons - Yeni 3x1 grid düzeni
         GridView.count(
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          childAspectRatio: 0.95,
+          crossAxisCount: 3,
+          childAspectRatio: 0.8,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           shrinkWrap: true,
           children: [
-            // Scan button
+            // Ask AI button - Ön plana çıkarıldı
             _buildFeatureButton(
               context,
-              iconWidget: _buildWireframeIcon(Icons.document_scanner_outlined),
-              title: 'Scan',
-              subtitle: 'Documents, ID cards...',
+              iconWidget: _buildWireframeIcon(Icons.chat_bubble_outline),
+              title: 'Soru Sor',
+              subtitle: 'Hukuki danışmanlık',
               onTap: () {
-                // Yeni DocumentScannerScreen'e yönlendir
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const DocumentScannerScreen()),
+                  MaterialPageRoute(builder: (context) => const AdvisorScreen()),
                 );
               },
-          ),
+              isHighlighted: true,
+            ),
             
             // Create button
             _buildFeatureButton(
               context,
-              iconWidget: _buildWireframeIcon(Icons.crop_square_outlined),
-              title: 'Create',
-              subtitle: 'Sign, add text, mark...',
+              iconWidget: _buildWireframeIcon(Icons.description_outlined),
+              title: 'Oluştur',
+              subtitle: 'Belge oluştur',
               onTap: () {
-                // AdvisorScreen'e özel parametre ile git (aynı işlevsellik + butonu gibi)
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -326,37 +405,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 );
               },
-          ),
+            ),
             
-            // Docs button - Changed onTap to navigate to SavedDocumentsScreen
+            // Docs button
             _buildFeatureButton(
               context,
               iconWidget: _buildWireframeIcon(Icons.folder_copy_outlined),
-              title: 'Docs',
-              subtitle: 'Saved PDFs & Files',
+              title: 'Belgeler',
+              subtitle: 'Kaydedilenler',
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SavedDocumentsScreen()),
                 );
               },
-          ),
-            
-            // Ask AI button
-            _buildFeatureButton(
-              context,
-              iconWidget: _buildWireframeIcon(Icons.grid_3x3_outlined),
-              title: 'Ask AI',
-              subtitle: 'Summarize, finish wri...',
-              onTap: () {
-                // Buradan gidildiğinde normal sohbet başlasın (parametre yok veya false)
-             Navigator.push(
-               context,
-               MaterialPageRoute(builder: (context) => const AdvisorScreen()),
-             );
-              },
             ),
           ],
+        ),
+        
+        const SizedBox(height: 24),
+        
+        // Son Belgeler Başlığı
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Son Belgeler',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SavedDocumentsScreen()),
+                );
+              },
+              child: Text(
+                'Tümünü Gör',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  color: AppTheme.secondaryColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Son belgeler listesi
+        ListView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: documents.length > 3 ? 3 : documents.length,
+          itemBuilder: (context, index) {
+            final doc = documents[index];
+            return _buildRecentDocumentItem(context, doc);
+          },
         ),
         
         const SizedBox(height: 20),
@@ -377,12 +487,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
-                   onChanged: (value) {
-                     // Placeholder for search logic
-                     print("Search query: $value");
-                   },
+                  onChanged: (value) {
+                    // Placeholder for search logic
+                    print("Search query: $value");
+                  },
                   decoration: InputDecoration(
-                    hintText: 'Search',
+                    hintText: 'Belge ara',
                     hintStyle: TextStyle(
                       color: Colors.grey[500],
                       fontSize: 16,
@@ -403,129 +513,359 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // Profil sayfası içeriği
-  Widget _buildProfileContent(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(height: 20),
-        
-        // Profil sayfası başlık
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
-              'Profil',
-              style: TextStyle(
-                color: AppTheme.primaryColor,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        
-        const SizedBox(height: 30),
-        
-        // Profile Avatar
-        Container(
-          width: 120,
-          height: 120,
+  // Son belge öğesi widget'ı
+  Widget _buildRecentDocumentItem(BuildContext context, DocumentModel document) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.grey[300],
-            border: Border.all(
-              color: AppTheme.primaryColor,
-              width: 3,
-            ),
+            color: AppTheme.secondaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: const Center(
-            child: Icon(
-              Icons.person,
-              size: 60,
-              color: AppTheme.primaryColor,
-            ),
+          child: const Icon(
+            Icons.picture_as_pdf,
+            color: AppTheme.secondaryColor,
+            size: 24,
           ),
         ),
-        
-        const SizedBox(height: 16),
-        
-        // User Name
-        const Text(
-          'Nixtio',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.primaryColor,
-          ),
-        ),
-        
-        const SizedBox(height: 8),
-        
-        // Email
-        Text(
-          'kullanici@ornek.com',
-                  style: TextStyle(
+        title: Text(
+          document.title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
             fontSize: 16,
+          ),
+        ),
+        subtitle: Text(
+          '${document.type} • ${document.date}',
+          style: TextStyle(
+            fontSize: 12,
             color: Colors.grey[600],
           ),
         ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppTheme.primaryColor,
+        ),
+        onTap: () {
+          // Belge görüntüleme ekranına git
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SavedDocumentsScreen()),
+          );
+        },
+      ),
+    );
+  }
+
+  // Profil sayfası içeriği
+  Widget _buildProfileContent(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
         
-        const SizedBox(height: 40),
+        // Üst Kısım - Profil Bilgileri
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Üst kısım karşılama ve düzenleme butonu
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Profiliniz',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          color: AppTheme.primaryColor,
+                          size: 18,
+                        ),
+                      ),
+                      onPressed: () {
+                        // Profil düzenleme fonksiyonu buraya eklenecek
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profil düzenleme yakında eklenecek'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Profil Avatarı
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey[200],
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 4,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      size: 60,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppTheme.secondaryColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2,
+                      ),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        // Profil fotoğrafı ekleme/değiştirme fonksiyonu
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profil fotoğrafı ekleme yakında eklenecek'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Kullanıcı Adı
+              const Text(
+                'Mehmet Yılmaz',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              
+              const SizedBox(height: 4),
+              
+              // E-posta
+              Text(
+                'mehmet.yilmaz@ornek.com',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Kullanıcı İstatistikleri
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.grey[200]!,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildStatItem('Belgeler', '12'),
+                    _buildStatDivider(),
+                    _buildStatItem('Sorular', '28'),
+                    _buildStatDivider(),
+                    _buildStatItem('Kayıtlı', '6 Ay'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         
-        // Settings List
+        const SizedBox(height: 24),
+        
+        // Ayarlar Başlığı
+        Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 8),
+          child: Text(
+            'Hesap Ayarları',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+        
+        // Ayarlar Listesi - Hesap
         _buildSettingsItem(
           icon: Icons.person_outline,
           title: 'Kişisel Bilgiler',
+          subtitle: 'Adınız, soyadınız ve diğer profil bilgileri',
           onTap: () {},
-              ),
+          showBadge: false,
+        ),
         
         _buildSettingsItem(
           icon: Icons.notifications_none,
           title: 'Bildirimler',
+          subtitle: 'Bildirim tercihlerinizi yönetin',
           onTap: () {},
+          showBadge: true,
         ),
         
         _buildSettingsItem(
           icon: Icons.lock_outline,
           title: 'Gizlilik ve Güvenlik',
+          subtitle: 'Şifre değiştirme ve güvenlik ayarları',
           onTap: () {},
+          showBadge: false,
+        ),
+        
+        // Uygulama Ayarları Başlığı
+        Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 8, top: 24),
+          child: Text(
+            'Uygulama Ayarları',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+        
+        // Ayarlar Listesi - Uygulama
+        _buildSettingsItem(
+          icon: Icons.language,
+          title: 'Dil',
+          subtitle: 'Türkçe',
+          onTap: () {},
+          showBadge: false,
+          showSwitch: false,
+          showArrow: true,
+        ),
+        
+        _buildSettingsItem(
+          icon: Icons.brightness_4,
+          title: 'Koyu Tema',
+          subtitle: 'Uygulama temasını değiştirin',
+          onTap: () {},
+          showBadge: false,
+          showSwitch: true,
+          showArrow: false,
         ),
         
         _buildSettingsItem(
           icon: Icons.help_outline,
           title: 'Yardım ve Destek',
+          subtitle: 'Sık sorulan sorular ve iletişim',
           onTap: () {},
+          showBadge: false,
         ),
         
-        _buildSettingsItem(
-          icon: Icons.settings_outlined,
-          title: 'Ayarlar',
-          onTap: () {},
-        ),
+        const SizedBox(height: 8),
         
-        const SizedBox(height: 20),
-        
-        // Logout Button
-        Container(
-          width: double.infinity,
-          height: 56,
-          margin: const EdgeInsets.symmetric(vertical: 16),
-          child: ElevatedButton(
-            onPressed: () {},
+        // Çıkış Yap Butonu
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              // Çıkış işlemi
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Çıkış yapılıyor...'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            icon: const Icon(Icons.logout_rounded, color: Colors.white),
+            label: const Text(
+              'Çıkış Yap',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[700],
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
               elevation: 0,
-            ),
-            child: const Text(
-              'Çıkış Yap',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
@@ -533,50 +873,128 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
+  
+  // Profil istatistik elemanı
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: AppTheme.primaryColor,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+  
+  // İstatistikler arasındaki dikey çizgi
+  Widget _buildStatDivider() {
+    return Container(
+      height: 30,
+      width: 1,
+      color: Colors.grey[300],
+    );
+  }
 
-  // Settings Item Widget
+  // Settings Item Widget - Geliştirilmiş
   Widget _buildSettingsItem({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    String subtitle = '',
+    bool showBadge = false,
+    bool showSwitch = false,
+    bool showArrow = true,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12, left: 8, right: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
+            color: Colors.black.withOpacity(0.03),
+            spreadRadius: 0,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: AppTheme.primaryColor,
-          size: 24,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppTheme.backgroundColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: AppTheme.primaryColor,
+            size: 22,
+          ),
         ),
         title: Text(
           title,
           style: const TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: AppTheme.primaryColor,
           ),
         ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          color: AppTheme.primaryColor,
-          size: 16,
-                      ),
+        subtitle: subtitle.isNotEmpty 
+            ? Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ) 
+            : null,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (showBadge)
+              Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: AppTheme.secondaryColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            if (showSwitch)
+              Switch.adaptive(
+                value: false, // Daha sonra bir state değişkeniyle bağlanabilir
+                onChanged: (value) {},
+                activeColor: AppTheme.secondaryColor,
+              )
+            else if (showArrow)
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: AppTheme.primaryColor,
+                size: 16,
+              ),
+          ],
+        ),
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );
@@ -589,6 +1007,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    bool isHighlighted = false, // Vurgulanacak buton için yeni parametre
   }) {
     final theme = Theme.of(context);
     
@@ -596,8 +1015,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          color: isHighlighted 
+              ? AppTheme.secondaryColor.withOpacity(0.1) 
+              : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03),
@@ -605,28 +1026,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               offset: const Offset(0, 2),
             ),
           ],
+          border: isHighlighted
+              ? Border.all(color: AppTheme.secondaryColor, width: 1.5)
+              : null,
         ),
-        padding: const EdgeInsets.all(26),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             iconWidget,
-            const Spacer(),
+            const SizedBox(height: 8),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 19,
-                color: AppTheme.primaryColor,
+                fontSize: 14,
+                color: isHighlighted
+                    ? AppTheme.secondaryColor
+                    : AppTheme.primaryColor,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 2),
             Text(
               subtitle,
               style: TextStyle(
                 color: AppTheme.mutedTextColor,
-                fontSize: 12,
+                fontSize: 10,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -651,7 +1084,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-// Belge modeli (Keep DocumentModel as is)
+// Belge modeli
 class DocumentModel {
   final String id;
   final String title;
@@ -668,6 +1101,4 @@ class DocumentModel {
     required this.type,
     required this.text,
   });
-}
-
-// Removed PageFoldPainter as it's no longer needed 
+} 

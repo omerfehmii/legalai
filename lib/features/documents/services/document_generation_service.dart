@@ -39,7 +39,7 @@ class DocumentGenerationService {
       String normalizedTitle = _normalizeText(documentName);
       
       final pdf = pw.Document();
-
+      
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -58,10 +58,10 @@ class DocumentGenerationService {
                   ),
                 ),
                 pw.SizedBox(height: 20),
-
+                
                 // Belge içeriği
                 pw.Text(normalizedContent),
-
+                
                 // Yasal uyarı (ASCII versiyonu)
                 pw.SizedBox(height: 30),
                 pw.Divider(),
@@ -74,7 +74,7 @@ class DocumentGenerationService {
                     fontStyle: pw.FontStyle.italic,
                   ),
                 ),
-
+                
                 // Oluşturulma tarihi
                 pw.SizedBox(height: 5),
                 pw.Text(
@@ -86,7 +86,7 @@ class DocumentGenerationService {
           },
         ),
       );
-
+      
       // Dosyayı kaydet
       final output = await getTemporaryDirectory(); // Use temporary dir for generated docs
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
@@ -96,7 +96,7 @@ class DocumentGenerationService {
           .toLowerCase();
       final file = File('${output.path}/${fileNameBase}_${timestamp}.pdf');
       await file.writeAsBytes(await pdf.save());
-
+      
       return file.path;
     } catch (e) {
       // Log the error for debugging

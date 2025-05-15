@@ -6,12 +6,15 @@ import 'dart:io'; // To check file existence
 import 'package:legalai/features/documents/data/models/saved_document.dart'; // Import SavedDocument
 import 'package:legalai/screens/pdf_viewer_screen.dart'; // Import to view PDFs
 import 'package:legalai/screens/document_editor_screen.dart'; // Import editor screen
+import 'package:legalai/core/theme/app_theme.dart';
 
 class SavedDocumentsScreen extends StatelessWidget {
   const SavedDocumentsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     // Try to get an existing reference to the box if it's already open
     Box<SavedDocument>? box;
     try {
@@ -23,31 +26,106 @@ class SavedDocumentsScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Kaydedilen Belgeler'),
+        elevation: 0,
+        backgroundColor: AppTheme.backgroundColor,
+        title: Text(
+          'Belgelerim',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          icon: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(8),
+            child: const Icon(Icons.arrow_back, color: AppTheme.primaryColor, size: 20),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.search, color: AppTheme.primaryColor),
+                onPressed: () {
+                  // Arama işlevselliği burada eklenebilir
+                },
+              ),
+            ),
+          ),
+        ],
       ),
-      body: box != null 
+      body: box != null
           ? _buildDocumentsList(context, box)
           : FutureBuilder<Box<SavedDocument>>(
               future: Hive.openBox<SavedDocument>('saved_documents'),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Belgeler yüklenirken bir hata oluştu: ${snapshot.error}'),
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.secondaryColor,
+                    ),
                   );
                 }
-                
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 60,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Belgeler yüklenirken bir hata oluştu',
+                          style: theme.textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${snapshot.error}',
+                          style: theme.textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 final box = snapshot.data;
                 if (box == null) {
-                  return Center(
+                  return const Center(
                     child: Text('Belge kutusu bulunamadı.'),
                   );
                 }
-                
+
                 return _buildDocumentsList(context, box);
               },
             ),
@@ -56,6 +134,8 @@ class SavedDocumentsScreen extends StatelessWidget {
   
   // Extracted the document list building logic to a separate method
   Widget _buildDocumentsList(BuildContext context, Box<SavedDocument> box) {
+    final theme = Theme.of(context);
+    
     return ValueListenableBuilder(
       valueListenable: box.listenable(),
       builder: (context, Box<SavedDocument> documentsBox, _) {
@@ -63,151 +143,501 @@ class SavedDocumentsScreen extends StatelessWidget {
         
         // Sort by creation date (newest first)
         documents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        
+
         if (documents.isEmpty) {
-          return const Center(
-            child: Text('Henüz kaydedilmiş belge bulunmuyor.'),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(60),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.description_outlined,
+                    size: 60,
+                    color: Colors.grey[400],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Henüz kaydedilmiş belge yok',
+                  style: theme.textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Oluşturduğunuz belgeler burada görünecek',
+                  style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                  label: const Text('Yeni Belge Oluştur'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.secondaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // Burada direkt belge oluşturma ekranına yönlendirme yapılabilir
+                  },
+                ),
+              ],
+            ),
           );
         }
-        
-        return ListView.builder(
-          itemCount: documents.length,
-          itemBuilder: (context, index) {
-            final doc = documents[index];
-            
-            return ListTile(
-              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              title: Text(doc.title),
-              subtitle: Text('${doc.documentType} - ${DateFormat('dd/MM/yyyy HH:mm').format(doc.createdAt)}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Düzenleme butonu
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    tooltip: 'Düzenle',
-                    onPressed: () => _editDocument(context, doc, documentsBox),
-                  ),
-                  // Silme butonu
-                  IconButton(
-                    icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
-                    tooltip: 'Sil',
-                    onPressed: () async {
-                      // Show confirmation dialog before deleting
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (BuildContext dialogContext) {
-                          return AlertDialog(
-                            title: const Text('Belgeyi Sil'),
-                            content: Text('"${doc.title}" adlı belgeyi ve kaydını kalıcı olarak silmek istediğinizden emin misiniz?'),
-                            actions: <Widget>[
-                              TextButton(
-                                child: const Text('İptal'),
-                                onPressed: () {
-                                  Navigator.of(dialogContext).pop(false); // Return false
-                                },
-                              ),
-                              TextButton(
-                                child: const Text('Sil', style: TextStyle(color: Colors.red)),
-                                onPressed: () {
-                                  Navigator.of(dialogContext).pop(true); // Return true
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
 
-                      // If user confirmed deletion
-                      if (confirmed == true) {
-                        try {
-                          // 1. Delete the Hive record
-                          await documentsBox.delete(doc.id);
-                          print('Deleted document with ID: ${doc.id}');
-
-                          // 2. Delete the actual file if it exists
-                          if (doc.pdfPath != null && doc.pdfPath!.isNotEmpty) {
-                            final file = File(doc.pdfPath!);
-                            if (await file.exists()) {
-                              await file.delete();
-                              print('Deleted PDF file: ${doc.pdfPath}');
-                            }
-                          }
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('"${doc.title}" başarıyla silindi.'))
-                          );
-                        } catch (e) {
-                          print("Error deleting document: $e");
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Belge silinirken bir hata oluştu: ${e.toString()}'))
-                          );
-                        }
-                      }
-                    },
-                  ),
-                ],
-              ),
-              onTap: () async {
-                if (doc.pdfPath != null && doc.pdfPath!.isNotEmpty) {
-                  // Check if file exists before attempting to open
-                  final file = File(doc.pdfPath!);
-                  if (await file.exists()) {
-                    Navigator.push(
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Özet bilgiler
+              Container(
+                margin: const EdgeInsets.only(bottom: 16, top: 8),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildSummaryItem(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => PdfViewerScreen.fromPath(pdfPath: doc.pdfPath!),
+                      icon: Icons.description_outlined,
+                      title: '${documents.length}',
+                      subtitle: 'Toplam Belge',
+                    ),
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: Colors.grey[200],
+                    ),
+                    _buildSummaryItem(
+                      context,
+                      icon: Icons.calendar_today_outlined,
+                      title: DateFormat('dd MMM').format(DateTime.now()),
+                      subtitle: 'Bugün',
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Belge türleri
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
+                child: Text(
+                  'Belgelerim',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              
+              // Belge listesi
+              Expanded(
+                child: documents.isEmpty
+                    ? const Center(child: Text('Belge bulunamadı.'))
+                    : ListView.builder(
+                        itemCount: documents.length,
+                        itemBuilder: (context, index) {
+                          final doc = documents[index];
+                          return _buildDocumentCard(context, doc, documentsBox);
+                        },
                       ),
-                    );
-                  } else {
-                    print('File not found: ${doc.pdfPath}');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('PDF dosyası bulunamadı. Yeniden oluşturmak için belge içeriğini kullanıyoruz...'),
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                    // PDF missing, but we can regenerate if we have the content
-                    if (doc.generatedContent != null && doc.generatedContent!.isNotEmpty) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PdfViewerScreen(documentContent: doc.generatedContent!),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Belge içeriği bulunamadı ve PDF dosyası yok.')),
-                      );
-                    }
-                  }
-                } else if (doc.generatedContent != null && doc.generatedContent!.isNotEmpty) {
-                  // We have content but no PDF, so generate one
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSummaryItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.secondaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              color: AppTheme.secondaryColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.mutedTextColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentCard(
+    BuildContext context,
+    SavedDocument doc,
+    Box<SavedDocument> documentsBox,
+  ) {
+    final theme = Theme.of(context);
+    
+    // Belge türüne göre ikon belirle
+    IconData docIcon;
+    Color iconColor;
+    
+    switch (doc.documentType.toLowerCase()) {
+      case 'sözleşme':
+        docIcon = Icons.assignment_outlined;
+        iconColor = Colors.blue;
+        break;
+      case 'vekaletname':
+        docIcon = Icons.gavel_outlined;
+        iconColor = Colors.purple;
+        break;
+      case 'dilekçe':
+        docIcon = Icons.article_outlined;
+        iconColor = Colors.teal;
+        break;
+      default:
+        docIcon = Icons.description_outlined;
+        iconColor = Colors.orange;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () async {
+            if (doc.pdfPath != null && doc.pdfPath!.isNotEmpty) {
+              final file = File(doc.pdfPath!);
+              if (await file.exists()) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PdfViewerScreen.fromPath(pdfPath: doc.pdfPath!),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('PDF dosyası bulunamadı. İçerik görüntüleniyor...'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                if (doc.generatedContent != null && doc.generatedContent!.isNotEmpty) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => PdfViewerScreen(documentContent: doc.generatedContent!),
                     ),
                   );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Bu belgede gösterilecek içerik bulunamadı.')),
-                  );
                 }
-              },
-            );
+              }
+            } else if (doc.generatedContent != null && doc.generatedContent!.isNotEmpty) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PdfViewerScreen(documentContent: doc.generatedContent!),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Bu belgede görüntülenecek içerik bulunamadı')),
+              );
+            }
           },
-        );
-      },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Belge tipine göre ikonlu konteyner
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    docIcon,
+                    color: iconColor,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Belge bilgileri
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        doc.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        doc.documentType,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.mutedTextColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: Colors.grey[500],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            DateFormat('dd.MM.yyyy · HH:mm').format(doc.createdAt),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // İşlem butonları
+                Column(
+                  children: [
+                    _buildActionButton(
+                      icon: Icons.edit_outlined,
+                      color: Colors.blue,
+                      onTap: () => _editDocument(context, doc, documentsBox),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionButton(
+                      icon: Icons.delete_outline,
+                      color: Colors.red,
+                      onTap: () => _showDeleteConfirmation(context, doc, documentsBox),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: color,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDeleteConfirmation(
+    BuildContext context,
+    SavedDocument doc,
+    Box<SavedDocument> documentsBox,
+  ) async {
+    final theme = Theme.of(context);
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Icon(
+              Icons.delete_forever,
+              color: Colors.red[400],
+              size: 60,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Belgeyi Silmek İstiyor musunuz?',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge,
+            ),
+          ],
+        ),
+        content: Text(
+          '"${doc.title}" adlı belgeyi ve kaydını kalıcı olarak silmek istediğinizden emin misiniz?',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium,
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.grey[300]!),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Vazgeç'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Sil'),
+                ),
+              ),
+            ],
+          ),
+        ],
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // 1. Delete the Hive record
+        await documentsBox.delete(doc.id);
+
+        // 2. Delete the actual file if it exists
+        if (doc.pdfPath != null && doc.pdfPath!.isNotEmpty) {
+          final file = File(doc.pdfPath!);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${doc.title}" başarıyla silindi'),
+            backgroundColor: Colors.green[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            action: SnackBarAction(
+              label: 'Tamam',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Belge silinirken bir hata oluştu: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // Belge düzenleme ekranına geçiş
-  Future<void> _editDocument(BuildContext context, SavedDocument document, Box<SavedDocument> box) async {
+  Future<void> _editDocument(
+    BuildContext context,
+    SavedDocument document,
+    Box<SavedDocument> box,
+  ) async {
     // Belgenin içeriği yoksa düzenleme yapılamaz
     if (document.generatedContent == null || document.generatedContent!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Düzenlenecek belge içeriği bulunamadı.'))
+        const SnackBar(content: Text('Düzenlenecek belge içeriği bulunamadı')),
       );
       return;
     }
@@ -220,12 +650,17 @@ class SavedDocumentsScreen extends StatelessWidget {
       ),
     );
     
-    // Eğer belge güncellendiyse, listeyi yenile
+    // Eğer belge güncellendiyse, kullanıcıya bilgi ver
     if (wasUpdated == true) {
-      // ValueListenable ile otomatik yenilenir, manuel yenileme gerekmez
-      // Bununla birlikte, UI güncellemesi için kullanıcıya bilgi verebiliriz
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Belge başarıyla güncellendi ve liste yenilendi.'))
+        SnackBar(
+          content: const Text('Belge başarıyla güncellendi'),
+          backgroundColor: Colors.green[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     }
   }
