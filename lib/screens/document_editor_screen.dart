@@ -4,11 +4,19 @@ import 'dart:io';
 import 'package:legalai/features/documents/data/models/saved_document.dart';
 import 'package:legalai/features/documents/services/document_generation_service.dart';
 import 'package:legalai/screens/pdf_viewer_screen.dart';
+import 'package:legalai/core/theme/app_theme.dart';
 
 class DocumentEditorScreen extends StatefulWidget {
   final SavedDocument document;
+  
+  // Callback fonksiyonu ekleniyor
+  final Function(String, String)? onSave;
 
-  const DocumentEditorScreen({Key? key, required this.document}) : super(key: key);
+  const DocumentEditorScreen({
+    Key? key, 
+    required this.document, 
+    this.onSave,
+  }) : super(key: key);
 
   @override
   _DocumentEditorScreenState createState() => _DocumentEditorScreenState();
@@ -40,24 +48,61 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('Belge Düzenle'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            tooltip: 'Kaydet',
-            onPressed: _saveDocument,
+        backgroundColor: AppTheme.backgroundColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(8),
+            child: const Icon(Icons.arrow_back, color: AppTheme.primaryColor, size: 20),
           ),
-          IconButton(
-            icon: const Icon(Icons.visibility),
-            tooltip: 'Önizle',
-            onPressed: _previewDocument,
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.save, color: AppTheme.primaryColor),
+                tooltip: 'Kaydet',
+                onPressed: _saveDocument,
+              ),
+            ),
           ),
         ],
       ),
       body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
+        ? const Center(child: CircularProgressIndicator(color: AppTheme.secondaryColor))
         : _buildEditorBody(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _previewDocument,
+        backgroundColor: AppTheme.secondaryColor,
+        child: const Icon(Icons.visibility),
+      ),
     );
   }
   
@@ -67,7 +112,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
             const SizedBox(height: 16),
             Text(
               'Hata Oluştu',
@@ -85,6 +130,10 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen> {
                   _errorMessage = null;
                 });
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.secondaryColor,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Tekrar Dene'),
             ),
           ],
@@ -98,90 +147,149 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Belge Başlığı
-          TextField(
-            controller: _titleController,
-            decoration: const InputDecoration(
-              labelText: 'Belge Başlığı',
-              border: OutlineInputBorder(),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Belge Başlığı',
+                border: InputBorder.none,
+                labelStyle: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryColor,
+              ),
             ),
           ),
           const SizedBox(height: 16),
           
           // Belge türü bilgisi (salt okunur)
           Container(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(4.0),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Text(
-              'Belge Türü: ${widget.document.documentType}',
-              style: const TextStyle(
-                fontStyle: FontStyle.italic,
-              ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.description_outlined, color: AppTheme.secondaryColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Belge Türü',
+                        style: TextStyle(
+                          color: AppTheme.mutedTextColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        widget.document.documentType,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          
-          // Belge içeriği
-          const Text(
-            'Belge İçeriği',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _contentController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Belge içeriğini buraya yazın...',
-            ),
-            maxLines: 20, // Çok satırlı içerik için
-            textAlignVertical: TextAlignVertical.top,
           ),
           const SizedBox(height: 24),
           
-          // Belge Kaydet ve Önizle Butonları
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _saveDocument,
-                  icon: const Icon(Icons.save),
-                  label: const Text('Kaydet'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+          // Belge içeriği
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Belge İçeriği',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryColor,
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _previewDocument,
-                  icon: const Icon(Icons.visibility),
-                  label: const Text('Önizle'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _contentController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.backgroundColor,
+                    hintText: 'Belge içeriğini buraya yazın...',
                   ),
+                  maxLines: 20,
+                  textAlignVertical: TextAlignVertical.top,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          const SizedBox(height: 24),
           
-          // Not: Düzenleme yapıldığında orijinal belge yeniden oluşturulacaktır
-          const SizedBox(height: 16),
-          const Text(
-            'Not: Değişiklikler yapıldığında, yeni bir PDF belgesi oluşturulacaktır.',
-            style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
-            textAlign: TextAlign.center,
+          // Kaydet Butonu
+          ElevatedButton.icon(
+            onPressed: _saveDocument,
+            icon: const Icon(Icons.save),
+            label: const Text('Kaydet ve Çık'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.secondaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
           ),
         ],
       ),
@@ -208,6 +316,13 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen> {
         throw Exception('Belge içeriği boş olamaz');
       }
       
+      // Eğer callback fonksiyonu tanımlanmışsa çağır
+      if (widget.onSave != null) {
+        widget.onSave!(newTitle, newContent);
+        Navigator.pop(context);
+        return;
+      }
+
       // PDF'i yeniden oluştur
       final documentGenerationService = DocumentGenerationService();
       final pdfPath = await documentGenerationService.generatePdfFromContent(
@@ -226,27 +341,23 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen> {
         }
       }
       
-      // Hive kaydını güncelle
-      final updatedDocument = SavedDocument(
-        title: newTitle,
-        documentType: widget.document.documentType,
-        collectedData: widget.document.collectedData,
-        pdfPath: pdfPath,
-        generatedContent: newContent,
-      );
-      // SavedDocument ID'sini koru
-      updatedDocument.id = widget.document.id;
+      // Belge verisini güncelle
+      widget.document.title = newTitle;
+      widget.document.generatedContent = newContent;
+      widget.document.pdfPath = pdfPath;
       
       // Hive'a kaydet
-      final box = await Hive.openBox<SavedDocument>('saved_documents');
-      await box.put(updatedDocument.id, updatedDocument);
+      await widget.document.save();
       
-      print('Belge güncellendi, ID: ${updatedDocument.id}');
+      print('Belge güncellendi, ID: ${widget.document.id}');
       
       // Kullanıcıya başarı mesajı göster
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Belge başarıyla güncellendi')),
+          const SnackBar(
+            content: Text('Belge başarıyla güncellendi'),
+            backgroundColor: Colors.green,
+          ),
         );
         
         // Önceki ekrana geri dön

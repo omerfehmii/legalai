@@ -504,164 +504,105 @@ class SavedDocumentsScreen extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           icon,
-          color: color,
           size: 20,
+          color: color,
         ),
       ),
     );
   }
 
-  Future<void> _showDeleteConfirmation(
+  // Extract the document editing logic
+  void _editDocument(
     BuildContext context,
     SavedDocument doc,
     Box<SavedDocument> documentsBox,
-  ) async {
-    final theme = Theme.of(context);
-    
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Column(
-          children: [
-            Icon(
-              Icons.delete_forever,
-              color: Colors.red[400],
-              size: 60,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Belgeyi Silmek İstiyor musunuz?',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge,
-            ),
-          ],
-        ),
-        content: Text(
-          '"${doc.title}" adlı belgeyi ve kaydını kalıcı olarak silmek istediğinizden emin misiniz?',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium,
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.grey[300]!),
-                    ),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Vazgeç'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Sil'),
-                ),
-              ),
-            ],
-          ),
-        ],
-        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        // 1. Delete the Hive record
-        await documentsBox.delete(doc.id);
-
-        // 2. Delete the actual file if it exists
-        if (doc.pdfPath != null && doc.pdfPath!.isNotEmpty) {
-          final file = File(doc.pdfPath!);
-          if (await file.exists()) {
-            await file.delete();
-          }
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('"${doc.title}" başarıyla silindi'),
-            backgroundColor: Colors.green[700],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            action: SnackBarAction(
-              label: 'Tamam',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Belge silinirken bir hata oluştu: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  // Belge düzenleme ekranına geçiş
-  Future<void> _editDocument(
-    BuildContext context,
-    SavedDocument document,
-    Box<SavedDocument> box,
-  ) async {
-    // Belgenin içeriği yoksa düzenleme yapılamaz
-    if (document.generatedContent == null || document.generatedContent!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Düzenlenecek belge içeriği bulunamadı')),
-      );
-      return;
-    }
-    
-    // Düzenleme ekranına git ve sonucu bekle
-    final wasUpdated = await Navigator.push<bool>(
+  ) {
+    // Navigate to document editor screen with the existing document
+    Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DocumentEditorScreen(document: document),
+        builder: (context) => DocumentEditorScreen(
+          document: doc,
+          onSave: (updatedTitle, updatedContent) {
+            // Update the document
+            doc.title = updatedTitle;
+            doc.generatedContent = updatedContent;
+            doc.save(); // Save changes to Hive box
+            
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Belge başarıyla güncellendi'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
+        ),
       ),
     );
-    
-    // Eğer belge güncellendiyse, kullanıcıya bilgi ver
-    if (wasUpdated == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Belge başarıyla güncellendi'),
-          backgroundColor: Colors.green[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+  }
+
+  // Extract the delete confirmation dialog
+  void _showDeleteConfirmation(
+    BuildContext context,
+    SavedDocument doc,
+    Box<SavedDocument> documentsBox,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Belgeyi Sil'),
+        content: Text('${doc.title} belgesini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-      );
-    }
+        actions: [
+          TextButton(
+            child: const Text('İptal'),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          TextButton(
+            child: const Text(
+              'Sil',
+              style: TextStyle(color: Colors.red),
+            ),
+            onPressed: () {
+              // If there's a PDF file associated with the document, delete it
+              if (doc.pdfPath != null && doc.pdfPath!.isNotEmpty) {
+                final file = File(doc.pdfPath!);
+                file.exists().then((exists) {
+                  if (exists) {
+                    file.delete();
+                  }
+                });
+              }
+              
+              // Delete from Hive box
+              doc.delete();
+              
+              // Close dialog
+              Navigator.of(ctx).pop();
+              
+              // Show success message
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Belge başarıyla silindi'),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 } 

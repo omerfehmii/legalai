@@ -25,6 +25,15 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   // Hangi içeriğin gösterileceğini tutan değişken
   HomeScreenContent _currentContent = HomeScreenContent.home;
+  
+  // Tema için boolean değer
+  bool isDarkMode = false;
+  
+  // Dil seçimi için değer
+  String selectedLanguage = 'Türkçe';
+  
+  // Bildirim ayarı için değer
+  bool notificationsEnabled = true;
 
   // İçeriği değiştiren fonksiyon
   void _switchContent(HomeScreenContent content) {
@@ -626,11 +635,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       onPressed: () {
-                        // Profil düzenleme fonksiyonu buraya eklenecek
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Profil düzenleme yakında eklenecek'),
-                            behavior: SnackBarBehavior.floating,
+                        // Profil adını düzenleme dialog'u
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Ad Düzenle'),
+                            content: TextField(
+                              decoration: const InputDecoration(
+                                hintText: 'Adınızı girin',
+                                filled: true,
+                              ),
+                              onSubmitted: (value) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('İsim güncellendi: $value'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('İptal'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('İsim güncellendi'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                                child: const Text('Kaydet'),
+                              ),
+                            ],
                           ),
                         );
                       },
@@ -688,11 +730,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         size: 18,
                       ),
                       onPressed: () {
-                        // Profil fotoğrafı ekleme/değiştirme fonksiyonu
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Profil fotoğrafı ekleme yakında eklenecek'),
-                            behavior: SnackBarBehavior.floating,
+                        // Fotoğraf seçme dialog'u
+                        showDialog(
+                          context: context,
+                          builder: (context) => SimpleDialog(
+                            title: const Text('Profil Fotoğrafı'),
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.photo_library),
+                                title: const Text('Galeriden Seç'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Galeri seçildi'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.camera_alt),
+                                title: const Text('Kamera ile Çek'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Kamera seçildi'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.delete_forever),
+                                title: const Text('Fotoğrafı Kaldır'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Fotoğraf kaldırıldı'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         );
                       },
@@ -705,22 +788,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               
               // Kullanıcı Adı
               const Text(
-                'Mehmet Yılmaz',
+                'Kullanıcı',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.primaryColor,
-                ),
-              ),
-              
-              const SizedBox(height: 4),
-              
-              // E-posta
-              Text(
-                'mehmet.yilmaz@ornek.com',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
                 ),
               ),
               
@@ -758,44 +830,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 12, bottom: 8),
           child: Text(
-            'Hesap Ayarları',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
-            ),
-          ),
-        ),
-        
-        // Ayarlar Listesi - Hesap
-        _buildSettingsItem(
-          icon: Icons.person_outline,
-          title: 'Kişisel Bilgiler',
-          subtitle: 'Adınız, soyadınız ve diğer profil bilgileri',
-          onTap: () {},
-          showBadge: false,
-        ),
-        
-        _buildSettingsItem(
-          icon: Icons.notifications_none,
-          title: 'Bildirimler',
-          subtitle: 'Bildirim tercihlerinizi yönetin',
-          onTap: () {},
-          showBadge: true,
-        ),
-        
-        _buildSettingsItem(
-          icon: Icons.lock_outline,
-          title: 'Gizlilik ve Güvenlik',
-          subtitle: 'Şifre değiştirme ve güvenlik ayarları',
-          onTap: () {},
-          showBadge: false,
-        ),
-        
-        // Uygulama Ayarları Başlığı
-        Padding(
-          padding: const EdgeInsets.only(left: 12, bottom: 8, top: 24),
-          child: Text(
             'Uygulama Ayarları',
             style: TextStyle(
               fontSize: 18,
@@ -809,8 +843,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _buildSettingsItem(
           icon: Icons.language,
           title: 'Dil',
-          subtitle: 'Türkçe',
-          onTap: () {},
+          subtitle: selectedLanguage,
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => SimpleDialog(
+                title: const Text('Dil Seçin'),
+                children: [
+                  ListTile(
+                    title: const Text('Türkçe'),
+                    selected: selectedLanguage == 'Türkçe',
+                    leading: const Icon(Icons.check),
+                    onTap: () {
+                      setState(() {
+                        selectedLanguage = 'Türkçe';
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('English'),
+                    selected: selectedLanguage == 'English',
+                    leading: const Icon(Icons.check),
+                    onTap: () {
+                      setState(() {
+                        selectedLanguage = 'English';
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
           showBadge: false,
           showSwitch: false,
           showArrow: true,
@@ -820,9 +885,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           icon: Icons.brightness_4,
           title: 'Koyu Tema',
           subtitle: 'Uygulama temasını değiştirin',
-          onTap: () {},
+          onTap: () {
+            setState(() {
+              isDarkMode = !isDarkMode;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(isDarkMode ? 'Koyu tema aktif' : 'Açık tema aktif'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
           showBadge: false,
           showSwitch: true,
+          switchValue: isDarkMode,
+          onSwitchChanged: (value) {
+            setState(() {
+              isDarkMode = value;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(value ? 'Koyu tema aktif' : 'Açık tema aktif'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          showArrow: false,
+        ),
+        
+        _buildSettingsItem(
+          icon: Icons.notifications_none,
+          title: 'Bildirimler',
+          subtitle: 'Bildirim tercihlerinizi yönetin',
+          onTap: () {
+            setState(() {
+              notificationsEnabled = !notificationsEnabled;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(notificationsEnabled ? 'Bildirimler açık' : 'Bildirimler kapalı'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          showBadge: false,
+          showSwitch: true,
+          switchValue: notificationsEnabled,
+          onSwitchChanged: (value) {
+            setState(() {
+              notificationsEnabled = value;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(value ? 'Bildirimler açık' : 'Bildirimler kapalı'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
           showArrow: false,
         ),
         
@@ -830,22 +949,116 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           icon: Icons.help_outline,
           title: 'Yardım ve Destek',
           subtitle: 'Sık sorulan sorular ve iletişim',
-          onTap: () {},
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Yardım ve Destek'),
+                content: const Text(
+                  'LegalAI uygulaması hakkında yardıma mı ihtiyacınız var?\n\n'
+                  'E-posta: support@legalai.com\n'
+                  'Telefon: 0212 123 45 67\n\n'
+                  'Çalışma saatleri: Hafta içi 09:00-18:00',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Kapat'),
+                  ),
+                ],
+              ),
+            );
+          },
           showBadge: false,
         ),
         
         const SizedBox(height: 8),
         
-        // Çıkış Yap Butonu
+        // Veri Temizleme Butonu
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
           child: ElevatedButton.icon(
             onPressed: () {
-              // Çıkış işlemi
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Çıkış yapılıyor...'),
-                  behavior: SnackBarBehavior.floating,
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Verileri Temizle'),
+                  content: const Text(
+                    'Tüm kayıtlı belgeleriniz ve soru geçmişiniz silinecek. Bu işlem geri alınamaz.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('İptal'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Tüm veriler temizlendi'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      child: const Text('Temizle'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            label: const Text(
+              'Verileri Temizle',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.withOpacity(0.1),
+              foregroundColor: Colors.red,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        
+        // Çıkış Yap Butonu
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 24),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Çıkış Yap'),
+                  content: const Text('Uygulamadan çıkmak istediğinize emin misiniz?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('İptal'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Çıkış yapıldı'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      child: const Text('Çıkış'),
+                    ),
+                  ],
                 ),
               );
             },
@@ -907,7 +1120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // Settings Item Widget - Geliştirilmiş
+  // Settings Item Widget - Geliştirilmiş switch desteği
   Widget _buildSettingsItem({
     required IconData icon,
     required String title,
@@ -915,6 +1128,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     String subtitle = '',
     bool showBadge = false,
     bool showSwitch = false,
+    bool? switchValue,
+    Function(bool)? onSwitchChanged,
     bool showArrow = true,
   }) {
     return Container(
@@ -980,8 +1195,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             if (showSwitch)
               Switch.adaptive(
-                value: false, // Daha sonra bir state değişkeniyle bağlanabilir
-                onChanged: (value) {},
+                value: switchValue ?? false,
+                onChanged: onSwitchChanged,
                 activeColor: AppTheme.secondaryColor,
               )
             else if (showArrow)
