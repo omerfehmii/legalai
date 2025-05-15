@@ -209,7 +209,7 @@ class _DocumentEditorScreenState extends State<DocumentEditorScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Belge Türü',
                         style: TextStyle(
                           color: AppTheme.mutedTextColor,

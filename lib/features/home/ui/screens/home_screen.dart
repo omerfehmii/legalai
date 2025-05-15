@@ -7,6 +7,7 @@ import 'package:legalai/core/theme/app_theme.dart';
 import 'package:legalai/features/advisor/ui/screens/advisor_screen.dart';
 import 'package:legalai/screens/saved_documents_screen.dart';
 import 'package:legalai/features/help/ui/screens/feature_tour_screen.dart';
+import 'package:legalai/features/documents/ui/screens/template_selection_screen.dart'; // Import template selection screen
 // import 'package:legalai/features/document_analysis/ui/screens/document_analysis_screen.dart'; // Kaldırıldı
 // import 'package:legalai/features/document_scanner/ui/screens/document_scanner_screen.dart'; // Scan özelliği kaldırıldı
 
@@ -419,7 +420,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const AdvisorScreen(startWithDocumentPrompt: true),
+                    builder: (context) => const TemplateSelectionScreen(),
                   ),
                 );
               },

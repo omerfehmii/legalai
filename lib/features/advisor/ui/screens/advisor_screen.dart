@@ -28,12 +28,14 @@ class AdvisorScreen extends ConsumerStatefulWidget {
   final bool startWithDocumentPrompt; // Add argument
   final String? chatId; // Add optional chatId for loading history
   final String? initialMessage; // Add initialMessage for document scanner
+  final String? initialPrompt; // Add initialPrompt for template selection
 
   const AdvisorScreen({
     super.key,
     this.chatId, // Initialize chatId
     this.startWithDocumentPrompt = false, // Default to false
     this.initialMessage, // Initialize initialMessage
+    this.initialPrompt, // Initialize initialPrompt
   });
 
   @override
@@ -67,6 +69,14 @@ class _AdvisorScreenState extends ConsumerState<AdvisorScreen> {
           // Use a slight delay to ensure chat is initialized
           Future.delayed(const Duration(milliseconds: 300), () {
             ref.read(advisorNotifierProvider.notifier).processAdvisorUserMessage(widget.initialMessage!);
+          });
+        }
+        
+        // If we have an initial prompt from template selection, process it
+        else if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
+          // Use a slight delay to ensure chat is initialized
+          Future.delayed(const Duration(milliseconds: 300), () {
+            ref.read(advisorNotifierProvider.notifier).processAdvisorUserMessage(widget.initialPrompt!);
           });
         }
       }
