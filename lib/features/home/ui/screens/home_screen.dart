@@ -6,6 +6,7 @@ import 'dart:ui'; // For ImageFilter
 import 'package:legalai/core/theme/app_theme.dart';
 import 'package:legalai/features/advisor/ui/screens/advisor_screen.dart';
 import 'package:legalai/screens/saved_documents_screen.dart';
+import 'package:legalai/features/help/ui/screens/help_guide_screen.dart';
 // import 'package:legalai/features/document_analysis/ui/screens/document_analysis_screen.dart'; // Kaldırıldı
 // import 'package:legalai/features/document_scanner/ui/screens/document_scanner_screen.dart'; // Scan özelliği kaldırıldı
 
@@ -206,22 +207,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Question mark icon (help)
-            Container(
-              width: 40,
-              height: 40,
-              child: Center(
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.primaryColor, width: 1.5),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.question_mark,
-                      color: AppTheme.primaryColor,
-                      size: 18,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HelpGuideScreen()),
+                );
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                child: Center(
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.primaryColor, width: 1.5),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.question_mark,
+                        color: AppTheme.primaryColor,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -950,23 +959,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           title: 'Yardım ve Destek',
           subtitle: 'Sık sorulan sorular ve iletişim',
           onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Yardım ve Destek'),
-                content: const Text(
-                  'LegalAI uygulaması hakkında yardıma mı ihtiyacınız var?\n\n'
-                  'E-posta: support@legalai.com\n'
-                  'Telefon: 0212 123 45 67\n\n'
-                  'Çalışma saatleri: Hafta içi 09:00-18:00',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Kapat'),
-                  ),
-                ],
-              ),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HelpGuideScreen()),
             );
           },
           showBadge: false,
