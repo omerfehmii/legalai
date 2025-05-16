@@ -5,7 +5,7 @@ import 'package:open_filex/open_filex.dart'; // To open PDF files
 import 'dart:io'; // To check file existence
 import 'package:legalai/features/documents/data/models/saved_document.dart'; // Import SavedDocument
 import 'package:legalai/screens/pdf_viewer_screen.dart'; // Import to view PDFs
-import 'package:legalai/screens/document_editor_screen.dart'; // Import editor screen
+import 'package:legalai/features/documents/ui/screens/document_edit_screen.dart'; // Yeni düzenleme ekranı
 import 'package:legalai/core/theme/app_theme.dart';
 
 class SavedDocumentsScreen extends StatelessWidget {
@@ -54,30 +54,7 @@ class SavedDocumentsScreen extends StatelessWidget {
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.search, color: AppTheme.primaryColor),
-                onPressed: () {
-                  // Arama işlevselliği burada eklenebilir
-                },
-              ),
-            ),
-          ),
-        ],
+        actions: [],
       ),
       body: box != null
           ? _buildDocumentsList(context, box)
@@ -248,16 +225,96 @@ class SavedDocumentsScreen extends StatelessWidget {
                 ),
               ),
               
-              // Belge türleri
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
-                child: Text(
-                  'Belgelerim',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+              // Filtreleme seçenekleri ve başlık
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
+                    child: Text(
+                      'Belgelerim',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
+                  
+                  // Filtreleme butonu
+                  PopupMenuButton<String>(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.filter_list_rounded, 
+                        color: AppTheme.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    onSelected: (value) {
+                      // Filtreleme işlemleri
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'all',
+                        child: Text('Tümü'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'favorites',
+                        child: Text('Favoriler'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'draft',
+                        child: Text('Taslaklar'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'completed',
+                        child: Text('Tamamlananlar'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'newest',
+                        child: Text('En Yeniler'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'oldest',
+                        child: Text('En Eskiler'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'category',
+                        child: Text('Kategoriye Göre'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              
+              // Belge türlerine göre yatay filtreleme
+              SizedBox(
+                height: 50,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _buildCategoryChip(context, 'Tümü', true),
+                    _buildCategoryChip(context, 'Sözleşmeler', false),
+                    _buildCategoryChip(context, 'Dilekçeler', false),
+                    _buildCategoryChip(context, 'Raporlar', false),
+                    _buildCategoryChip(context, 'Kişisel', false),
+                    _buildCategoryChip(context, 'Ticari', false),
+                    _buildCategoryChip(context, 'Diğer', false),
+                  ],
                 ),
               ),
+              
+              const SizedBox(height: 8),
               
               // Belge listesi
               Expanded(
@@ -528,23 +585,8 @@ class SavedDocumentsScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DocumentEditorScreen(
+        builder: (context) => DocumentEditScreen(
           document: doc,
-          onSave: (updatedTitle, updatedContent) {
-            // Update the document
-            doc.title = updatedTitle;
-            doc.generatedContent = updatedContent;
-            doc.save(); // Save changes to Hive box
-            
-            // Show success message
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Belge başarıyla güncellendi'),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: Colors.green,
-              ),
-            );
-          },
         ),
       ),
     );
@@ -602,6 +644,26 @@ class SavedDocumentsScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(BuildContext context, String label, bool isSelected) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: isSelected,
+        backgroundColor: Colors.white,
+        selectedColor: AppTheme.secondaryColor.withOpacity(0.2),
+        checkmarkColor: AppTheme.secondaryColor,
+        labelStyle: TextStyle(
+          color: isSelected ? AppTheme.secondaryColor : AppTheme.primaryColor,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+        onSelected: (bool selected) {
+          // Filtreleme işlemi
+        },
       ),
     );
   }
